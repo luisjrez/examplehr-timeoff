@@ -1,0 +1,87 @@
+{
+  "id": "plan-0002",
+  "title": "Component architecture: folder-per-component + UI primitives",
+  "spec": "User request 2026-06-10: stop repeating raw div/span/button markup by extracting UI primitives, and co-locate every component's files (impl, types, tests, stories, skeleton) in a folder per component. AGENTS.md layer rules apply throughout.",
+  "status": "approved",
+  "createdAt": "2026-06-10T22:40:00Z",
+  "updatedAt": "2026-06-10T22:40:00Z",
+  "notes": [
+    "Phases are sequential by design: the primitives (phase-2) should be born inside the folder structure (phase-1), not migrated twice.",
+    "Inventory at planning time: 7 raw <button>s across 5 files; 4 duplicated pill spans; 8 card containers; 4 repeats of the muted-text class; the Live/Periodic-sync badge is copy-pasted verbatim in both views; Skeleton.tsx holds 4 components in one file."
+  ],
+  "phases": [
+    {
+      "id": "phase-1",
+      "title": "Folder-per-component migration",
+      "goal": "Each component owns a folder with all its related files (impl, test, stories, co-located skeleton) plus an index.ts barrel so existing '@/components/X' imports keep resolving unchanged.",
+      "dependsOn": [],
+      "parallelizable": false,
+      "status": "pending",
+      "tasks": [
+        {
+          "id": "t1",
+          "description": "git mv the 6 component groups into folders (BalanceCellCard, DecisionPanel, ProvenanceBadge, ReconciliationToaster, RequestForm, RequestTimeline), each with index.ts re-exporting the public API.",
+          "status": "pending",
+          "verification": "pnpm typecheck && pnpm lint (imports resolve via folder index)"
+        },
+        {
+          "id": "t2",
+          "description": "Dissolve Skeleton.tsx: base Skeleton primitive moves to its own folder; BalanceCellSkeleton, DecisionPanelSkeleton and RequestFormSkeleton move INTO their owning component's folder (exported from its index).",
+          "status": "pending",
+          "verification": "pnpm test && pnpm test:storybook"
+        },
+        {
+          "id": "t3",
+          "description": "Extract the private Toast from ReconciliationToaster into its own file inside the same folder; fix all internal relative imports.",
+          "status": "pending",
+          "verification": "pnpm test && pnpm test:storybook && pnpm test:e2e (full gate — structure-only change must be behavior-neutral)"
+        }
+      ],
+      "acceptance": [
+        "No import outside src/components changed its specifier",
+        "Every component folder contains impl + index, and its test/stories/skeleton when they exist",
+        "Chromatic reports zero visual changes (pure restructure)"
+      ],
+      "artifacts": ["src/components/", "src/views/ (imports only)"]
+    },
+    {
+      "id": "phase-2",
+      "title": "UI primitives replace raw markup",
+      "goal": "Repeated div/span/button patterns become typed primitives under src/components/ui/ (folder-per-primitive, with stories as design-system docs): Button, Chip, Card, FormField, MutedText, ViewSection — plus a shared SyncModeBadge replacing the badge duplicated across both views.",
+      "dependsOn": ["phase-1"],
+      "parallelizable": false,
+      "status": "pending",
+      "tasks": [
+        {
+          "id": "t1",
+          "description": "TDD the primitives: Button (primary/success/danger/ghost variants, disabled), Chip (tone map), Card (as div/li), FormField (label wiring via htmlFor), MutedText, ViewSection (section + aria-label + heading). Stories per primitive document the variant matrix.",
+          "status": "pending",
+          "verification": "pnpm test && pnpm test:storybook"
+        },
+        {
+          "id": "t2",
+          "description": "Extract SyncModeBadge (the Live/Periodic-sync pill duplicated verbatim in EmployeeView and ManagerView) built on Chip.",
+          "status": "pending",
+          "verification": "pnpm test:e2e (the '● Live' assertions must keep passing)"
+        },
+        {
+          "id": "t3",
+          "description": "Refactor consumers to the primitives: RequestForm, RequestTimeline, DecisionPanel, ProvenanceBadge (Chip), ReconciliationToaster, both views, landing page links. Class strings preserved so visuals stay pixel-identical.",
+          "status": "pending",
+          "verification": "pnpm test && pnpm test:storybook && pnpm test:e2e; Chromatic diff reviewed (expected: zero or intentional-only)"
+        }
+      ],
+      "acceptance": [
+        "No raw <button> outside src/components/ui/Button",
+        "No duplicated pill/card/muted-text class strings outside the primitives",
+        "All 151 existing tests stay green without weakening any assertion"
+      ],
+      "artifacts": [
+        "src/components/ui/",
+        "src/components/",
+        "src/views/",
+        "src/app/page.tsx"
+      ]
+    }
+  ]
+}
