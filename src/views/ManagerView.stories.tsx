@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { delay, http, HttpResponse } from "msw";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { createHcmStore } from "@/mocks/hcmStore";
@@ -44,6 +45,26 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/** Queue still loading: layout-true skeletons, no content jump. */
+export const LoadingQueue: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.get("/api/hcm/requests", async () => {
+          await delay("infinite");
+          return HttpResponse.json({ requests: [] });
+        }),
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.getByText(/loading pending requests/i),
+    ).toBeInTheDocument();
+  },
+};
 
 /** Nothing to review. */
 export const EmptyQueue: Story = {

@@ -140,7 +140,7 @@ When a reconciliation (corpus or cell read) changes a confirmed value while the 
 
 ### 6.6 Real-time push (SSE)
 
-Polling alone leaves a window of up to 60s where an external mutation (bonus, a manager deciding elsewhere) is invisible. The mock HCM therefore also exposes `GET /api/hcm/events` — a **Server-Sent Events** stream of confirmed cell changes — and the employee view subscribes (`useRealtimeBalances`).
+Polling alone leaves a window of up to 60s where an external mutation (bonus, a manager deciding elsewhere) is invisible. The mock HCM therefore also exposes `GET /api/hcm/events` — a **Server-Sent Events** stream of cell AND request changes — and both views subscribe (`useRealtimeHcm`). Request events are the multi-user sync path: an open manager tab sees new filings instantly, and an employee learns decisions the moment they happen.
 
 - **Same merge rules as the corpus** (`reconcileRealtimeEvent`): versions win over arrival order, never regress a cell. SSE is a faster delivery path for the same truth, not a second source of truth.
 - **Narration is provenance-aware**: external changes toast ("Balance updated by HCM"); changes explained by this session's own in-flight request stay silent — the SSE echo of your own write can beat the verification read, and toasting your own action is noise.

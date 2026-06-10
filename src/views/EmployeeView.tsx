@@ -15,7 +15,7 @@ import {
   useCorpusReconciliation,
   useDecisionSync,
   useLedgerRequests,
-  useRealtimeBalances,
+  useRealtimeHcm,
   useRequestRecovery,
   useSubmitRequest,
   useTriggerAnniversary,
@@ -24,6 +24,7 @@ import type { ChaosInjection } from "@/data/hcmApi";
 import { queryKeys } from "@/data/queryKeys";
 import { EMPLOYEE_DIRECTORY, LOCATION_DIRECTORY } from "@/mocks/hcmStore";
 import { BalanceCellCard } from "@/components/BalanceCellCard";
+import { BalanceCellSkeleton } from "@/components/Skeleton";
 import { RequestForm, type RequestFormValues } from "@/components/RequestForm";
 import { RequestTimeline } from "@/components/RequestTimeline";
 import { ReconciliationToaster } from "@/components/ReconciliationToaster";
@@ -68,7 +69,7 @@ function BalanceSection({
  */
 export function EmployeeView(): ReactElement {
   const { hydrated } = useCorpusReconciliation();
-  const { live } = useRealtimeBalances();
+  const { live } = useRealtimeHcm();
   useDecisionSync();
   const queryClient = useQueryClient();
   const { submit, isSubmitting } = useSubmitRequest();
@@ -176,9 +177,15 @@ export function EmployeeView(): ReactElement {
 
       <section aria-label="Balances">
         {!hydrated && locationIds.length === 0 ? (
-          <p role="status" className="text-sm text-gray-500 dark:text-zinc-400">
-            Loading balances from HCM…
-          </p>
+          <div
+            role="status"
+            aria-label="Loading balances"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+          >
+            <span className="sr-only">Loading balances from HCM…</span>
+            <BalanceCellSkeleton />
+            <BalanceCellSkeleton />
+          </div>
         ) : locationIds.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-zinc-400">
             No balances found for this employee.

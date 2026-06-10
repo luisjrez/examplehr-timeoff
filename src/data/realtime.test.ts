@@ -118,6 +118,71 @@ describe("reconcileRealtimeEvent", () => {
     expect(h.notify).not.toHaveBeenCalled();
   });
 
+  it("should fold a manager decision straight into the session ledger (multi-user sync)", () => {
+    const h = harness(cell(9, 2));
+    h.ledger.getState().upsert({
+      id: "client-1",
+      employeeId: EMP,
+      locationId: LOC,
+      days: 3,
+      phase: { status: "pending_approval" },
+      createdAt: "2026-06-10T12:00:00Z",
+      hcmId: "req-0001",
+    });
+
+    reconcileRealtimeEvent(
+      h.queryClient,
+      h.ledger,
+      JSON.stringify({
+        type: "request",
+        request: {
+          id: "req-0001",
+          employeeId: EMP,
+          locationId: LOC,
+          days: 3,
+          status: "approved",
+          filedAt: "2026-06-10T11:00:00Z",
+          decidedAt: "2026-06-10T12:01:00Z",
+        },
+      }),
+      h.notify,
+    );
+
+    expect(h.ledger.getState().requests["client-1"]?.phase.status).toBe(
+      "approved",
+    );
+    expect(h.notify).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "request_confirmed" }),
+    );
+  });
+
+  it("should invalidate the request queries on any request event (manager queues refresh live)", () => {
+    const h = harness(cell(12, 1));
+    const invalidate = vi.spyOn(h.queryClient, "invalidateQueries");
+
+    reconcileRealtimeEvent(
+      h.queryClient,
+      h.ledger,
+      JSON.stringify({
+        type: "request",
+        request: {
+          id: "req-0002",
+          employeeId: EMP,
+          locationId: LOC,
+          days: 1,
+          status: "pending",
+          filedAt: "2026-06-10T11:00:00Z",
+        },
+      }),
+      h.notify,
+    );
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: queryKeys.requestsRoot,
+    });
+    expect(h.notify).not.toHaveBeenCalled();
+  });
+
   it("should seed an unknown cell silently (first sight, nothing to compare)", () => {
     const h = harness();
 

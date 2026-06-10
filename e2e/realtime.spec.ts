@@ -37,6 +37,32 @@ test("an external anniversary bonus reaches the open session live, with narratio
   await expect(page.getByText(/balance updated by hcm/i).first()).toBeVisible();
 });
 
+test("a filing from another session appears in the open manager queue live", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/manager");
+  await expect(page.getByText("No requests waiting for review.")).toBeVisible();
+  await expect(page.getByText("● Live")).toBeVisible();
+
+  // Another user files a request — not through this tab.
+  const cellRead = await request.get("/api/hcm/balance/emp-alice/loc-mx");
+  const cell = (await cellRead.json()) as { version: number };
+  const filed = await request.post("/api/hcm/requests", {
+    data: {
+      employeeId: "emp-alice",
+      locationId: "loc-mx",
+      days: 2,
+      expectedVersion: cell.version,
+    },
+  });
+  expect(filed.status()).toBe(201);
+
+  // The queue updates within seconds — the 10s poll cannot explain this.
+  await expect(page.getByText(/emp-alice/)).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByRole("button", { name: "Approve" })).toBeEnabled();
+});
+
 test("a manager decision elsewhere updates the employee's balance live", async ({
   browser,
   request,
@@ -67,14 +93,14 @@ test("a manager decision elsewhere updates the employee's balance live", async (
   });
   expect(denied.ok()).toBeTruthy();
 
-  // The refund reaches the open session via SSE; the decision sync narrates
-  // the denial itself within its 5s poll.
+  // Both the refund (cell event) and the denial (request event) reach the
+  // open session via SSE — no poll required.
   await expect(employeePage.getByText("12", { exact: true })).toBeVisible({
     timeout: 5_000,
   });
   await expect(
     employeePage.getByText("Denied by your manager.", { exact: true }),
-  ).toBeVisible({ timeout: 15_000 });
+  ).toBeVisible({ timeout: 5_000 });
 
   await context.close();
 });

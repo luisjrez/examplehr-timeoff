@@ -7,8 +7,10 @@ import {
   useBalanceCell,
   useDecideRequest,
   usePendingRequests,
+  useRealtimeHcm,
 } from "@/data/hooks";
 import { DecisionPanel } from "@/components/DecisionPanel";
+import { DecisionPanelSkeleton } from "@/components/Skeleton";
 import { ReconciliationToaster } from "@/components/ReconciliationToaster";
 
 interface PendingRequestSectionProps {
@@ -73,11 +75,24 @@ function PendingRequestSection({
 /** Manager container: pending queue with balance context at decision time. */
 export function ManagerView(): ReactElement {
   const { requests, isLoading } = usePendingRequests();
+  // Request events stream in live: new filings appear without waiting a poll.
+  const { live } = useRealtimeHcm();
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
       <header>
-        <h1 className="text-2xl font-semibold">Pending approvals</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-semibold">
+          Pending approvals
+          <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+              live
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
+                : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
+            }`}
+          >
+            {live ? "● Live" : "○ Polling"}
+          </span>
+        </h1>
         <p className="text-sm text-gray-600 dark:text-zinc-300">
           Balances shown are read from HCM at decision time, not cached.
         </p>
@@ -85,9 +100,13 @@ export function ManagerView(): ReactElement {
 
       <section aria-label="Pending requests" className="flex flex-col gap-3">
         {isLoading ? (
-          <p role="status" className="text-sm text-gray-500 dark:text-zinc-400">
-            Loading pending requests…
-          </p>
+          <div role="status" aria-label="Loading pending requests">
+            <span className="sr-only">Loading pending requests…</span>
+            <div className="flex flex-col gap-3">
+              <DecisionPanelSkeleton />
+              <DecisionPanelSkeleton />
+            </div>
+          </div>
         ) : requests.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-zinc-400">
             No requests waiting for review.

@@ -212,13 +212,22 @@ quality (prettier → eslint → typecheck → unit → storybook → e2e → bu
 
 ### Real-time (SSE)
 
-`GET /api/hcm/events` streams confirmed-cell changes (the store's
-`subscribe()` feeds it). The client folds events via `reconcileRealtimeEvent`
-— same no-version-regression rule as the corpus, and it stays SILENT for
-changes explained by the session's own in-flight requests (the echo of your
-own write must not toast). MSW answers this route with **204** so EventSource
-closes permanently in Storybook/tests and the UI falls back to polling.
-If you add store mutations, route them through `mutateCell` so they emit.
+`GET /api/hcm/events` streams cell AND request changes (the store's
+`subscribe()` feeds it). The client folds events via `reconcileRealtimeEvent`:
+
+- **cell** events: same no-version-regression rule as the corpus; SILENT for
+  changes explained by the session's own in-flight requests (the echo of your
+  own write must not toast).
+- **request** events: the multi-user sync path — they invalidate the request
+  queries (open manager tabs refresh live) and fold decisions straight into
+  the employee ledger via `syncDecisions`.
+
+MSW answers this route with **204** so EventSource closes permanently in
+Storybook/tests and the UI falls back to polling. If you add store mutations,
+route them through `mutateCell` / emit a request event so live clients see
+them. Note for e2e: live sync collapses UI race windows — specs that want a
+stale-version 409 must force it at the HTTP level (see the version-gated
+spec), not by clicking a stale button that SSE already refreshed.
 
 ## Repo-specific gotchas
 

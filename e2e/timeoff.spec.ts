@@ -127,7 +127,7 @@ test("anniversary bonus mid-session reconciles with a narrated toast", async ({
   await expect(page.getByText(/balance updated by hcm/i).first()).toBeVisible();
 });
 
-test("approval is version-gated: a bonus between read and click blocks it", async ({
+test("approval is version-gated: stale writes 409, the live panel re-arms with truth", async ({
   page,
   request,
 }) => {
@@ -142,26 +142,33 @@ test("approval is version-gated: a bonus between read and click blocks it", asyn
       expectedVersion: cell.version,
     },
   });
+  const filedRecord = (await filed.json()) as { id: string };
   expect(filed.status()).toBe(201);
 
   await page.goto("/manager");
   await expect(page.getByRole("button", { name: "Approve" })).toBeEnabled();
+  const staleVersion = cell.version + 1; // version after the filing's debit
 
-  // The world moves AFTER the panel's fresh read.
+  // The world moves AFTER the panel's fresh read…
   const bonus = await request.post("/api/hcm/triggers/anniversary", {
     data: { employeeId: "emp-alice" },
   });
   expect(bonus.ok()).toBeTruthy();
 
-  await page.getByRole("button", { name: "Approve" }).click();
+  // …and the open panel re-arms LIVE with the new balance (10 + 1 bonus).
+  await expect(page.getByText("11", { exact: true })).toBeVisible({
+    timeout: 5_000,
+  });
 
-  // Structurally blocked (409) and re-armed with the fresh balance.
-  await expect(
-    page.getByText(/the balance changed since you opened/i).first(),
-  ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Approve" })).toBeEnabled();
+  // The CAS gate itself, end-to-end: a write carrying the stale version is
+  // structurally rejected by the real route handler.
+  const staleDecision = await request.patch(
+    `/api/hcm/requests/${filedRecord.id}`,
+    { data: { decision: "approve", expectedCellVersion: staleVersion } },
+  );
+  expect(staleDecision.status()).toBe(409);
 
-  // Second decision, now against current truth, succeeds.
+  // The UI, holding current truth thanks to SSE, approves cleanly.
   await page.getByRole("button", { name: "Approve" }).click();
   await expect(page.getByText("No requests waiting for review.")).toBeVisible();
 });

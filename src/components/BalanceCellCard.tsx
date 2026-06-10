@@ -1,14 +1,48 @@
-import type { ReactElement } from "react";
+"use client";
+
+import { useEffect, useRef, useState, type ReactElement } from "react";
 
 import type { BalanceCellView } from "@/domain/types";
 
 import { ProvenanceBadge } from "./ProvenanceBadge";
+import { BalanceCellSkeleton } from "./Skeleton";
 
 interface BalanceCellCardProps {
   readonly locationName: string;
   readonly view: BalanceCellView;
   readonly isLoading: boolean;
 }
+
+const FLASH_DURATION_MS = 900;
+
+type Flash = "up" | "down" | undefined;
+
+/**
+ * Narrates value changes instead of letting the number teleport: a short
+ * tinted flash (emerald up, amber down) makes optimistic applies and
+ * rollbacks read as intentional transitions, not glitches.
+ */
+function useValueFlash(value: number): Flash {
+  const previous = useRef(value);
+  const [flash, setFlash] = useState<Flash>(undefined);
+
+  useEffect(() => {
+    if (previous.current === value) {
+      return undefined;
+    }
+    setFlash(value > previous.current ? "up" : "down");
+    previous.current = value;
+    const timer = setTimeout(() => setFlash(undefined), FLASH_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  return flash;
+}
+
+const FLASH_STYLES: Readonly<Record<"up" | "down", string>> = {
+  up: "text-emerald-600 dark:text-emerald-400",
+  down: "text-amber-600 dark:text-amber-400",
+};
 
 /**
  * One balance row (employee × location). The big number is the PROJECTION;
@@ -20,20 +54,14 @@ export function BalanceCellCard({
   view,
   isLoading,
 }: BalanceCellCardProps): ReactElement {
+  const flash = useValueFlash(view.projected);
+
   if (!view.confirmed && isLoading) {
-    return (
-      <div
-        role="status"
-        aria-label={`Loading balance for ${locationName}`}
-        className="animate-pulse rounded-xl border border-gray-200 dark:border-zinc-700 p-4"
-      >
-        <div className="mb-3 h-4 w-24 rounded bg-gray-200 dark:bg-zinc-700" />
-        <div className="h-10 w-16 rounded bg-gray-200 dark:bg-zinc-700" />
-      </div>
-    );
+    return <BalanceCellSkeleton />;
   }
 
   const heldDays = view.pending.reduce((sum, request) => sum + request.days, 0);
+  const verifying = heldDays > 0;
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-zinc-700 p-4">
@@ -43,10 +71,19 @@ export function BalanceCellCard({
         </h3>
         <ProvenanceBadge staleness={view.staleness} />
       </div>
-      <p className="text-4xl font-semibold tabular-nums">{view.projected}</p>
+      <p
+        className={`text-4xl font-semibold tabular-nums transition-colors duration-500 ${
+          flash ? FLASH_STYLES[flash] : ""
+        }`}
+      >
+        {view.projected}
+      </p>
       <p className="text-xs text-gray-500 dark:text-zinc-400">days available</p>
-      {heldDays > 0 && view.confirmed ? (
-        <p className="mt-2 text-xs text-gray-600 dark:text-zinc-300">
+      {verifying && view.confirmed ? (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-300">
+          {/* Pulse while the hold is unverified: the rollback, if it comes,
+              reads as "the hold was released", not as a glitch. */}
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-blue-500" />
           {view.confirmed.days} confirmed by HCM · −{heldDays} pending
           confirmation
         </p>

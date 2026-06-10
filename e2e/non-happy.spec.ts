@@ -157,22 +157,29 @@ test("two managers race: the second decision on a settled request fails safely",
   await expect(managerA.getByRole("button", { name: "Approve" })).toBeEnabled();
   await expect(managerB.getByRole("button", { name: "Deny" })).toBeEnabled();
 
-  // A approves first; B then tries to deny the already-settled request.
+  // A approves first. B's queue reconciles LIVE (request event over SSE):
+  // the already-settled request vanishes before B can act on it — the race
+  // is prevented, not merely rejected.
   await managerA.getByRole("button", { name: "Approve" }).click();
   await expect(
     managerA.getByText("No requests waiting for review."),
   ).toBeVisible();
-
-  await managerB.getByRole("button", { name: "Deny" }).click();
-
-  // B is told the decision could not be processed — no silent flip.
-  await expect(
-    managerB.getByText(/could not process the decision/i),
-  ).toBeVisible();
-  // B's queue reconciles on the next poll: nothing left to decide.
   await expect(
     managerB.getByText("No requests waiting for review."),
-  ).toBeVisible({ timeout: 15_000 });
+  ).toBeVisible({ timeout: 5_000 });
+
+  // And if a stale decision still slips through (e.g. SSE down), HCM's
+  // not_pending guard rejects it end-to-end — no silent flip.
+  const pending = await managerB.request.get("/api/hcm/requests");
+  const { requests } = (await pending.json()) as {
+    requests: ReadonlyArray<{ id: string }>;
+  };
+  const settledId = requests[0]?.id ?? "";
+  const staleDeny = await managerB.request.patch(
+    `/api/hcm/requests/${settledId}`,
+    { data: { decision: "deny", expectedCellVersion: 999 } },
+  );
+  expect(staleDeny.status()).toBe(409);
 
   await context.close();
 });

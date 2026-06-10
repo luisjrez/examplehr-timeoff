@@ -33,8 +33,8 @@ export async function GET(request: Request): Promise<Response> {
 
       send(`data: ${JSON.stringify({ type: "hello" })}\n\n`);
 
-      const unsubscribe = store.subscribe((cell) => {
-        send(`data: ${JSON.stringify({ type: "cell", cell })}\n\n`);
+      const unsubscribe = store.subscribe((event) => {
+        send(`data: ${JSON.stringify(event)}\n\n`);
       });
 
       // Comment frames keep intermediaries from killing the idle connection.

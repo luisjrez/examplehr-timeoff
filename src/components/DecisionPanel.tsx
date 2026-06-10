@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import type { BalanceCellView, HcmRequestRecord } from "@/domain/types";
 
 import { ProvenanceBadge } from "./ProvenanceBadge";
+import { Skeleton } from "./Skeleton";
 
 interface DecisionPanelProps {
   readonly request: HcmRequestRecord;
@@ -43,8 +44,10 @@ export function DecisionPanel({
 
       <div className="flex items-center gap-2 rounded-md bg-gray-50 dark:bg-zinc-800/70 p-2 text-sm">
         {isCellLoading || !cellView.confirmed ? (
-          <span role="status" className="text-gray-500 dark:text-zinc-400">
-            Reading current balance from HCM…
+          <span role="status" className="flex w-full items-center gap-2">
+            <span className="sr-only">Reading current balance from HCM…</span>
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-12 rounded-full" />
           </span>
         ) : (
           <>

@@ -40,16 +40,23 @@ export interface FileRequestInput {
   readonly chaos?: ChaosMode;
 }
 
-/** Listener for cell mutations — feeds the real-time SSE endpoint. */
-export type CellListener = (cell: BalanceCell) => void;
+/**
+ * Mutation events — they feed the real-time SSE endpoint. Cells change on
+ * debits/refunds/bonuses/re-seeds; requests change on filing and decisions.
+ */
+export type HcmStoreEvent =
+  | { readonly type: "cell"; readonly cell: BalanceCell }
+  | { readonly type: "request"; readonly request: HcmRequestRecord };
+
+export type HcmStoreListener = (event: HcmStoreEvent) => void;
 
 export interface HcmStore {
   getCell(employeeId: string, locationId: string): BalanceCell | undefined;
   /**
-   * Subscribe to confirmed-cell changes (debits, refunds, bonuses, re-seeds).
-   * Only actual mutations emit — rejected writes change nothing and are silent.
+   * Subscribe to store mutations. Only actual changes emit — rejected
+   * writes change nothing and are silent.
    */
-  subscribe(listener: CellListener): () => void;
+  subscribe(listener: HcmStoreListener): () => void;
   getCorpus(): readonly BalanceCell[];
   fileRequest(input: FileRequestInput): HcmResult<HcmRequestRecord>;
   getRequest(id: string): HcmRequestRecord | undefined;
@@ -91,12 +98,12 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
   let cells = new Map<CellKey, BalanceCell>();
   let requests = new Map<string, HcmRequestRecord>();
   let requestSequence = 0;
-  const listeners = new Set<CellListener>();
+  const listeners = new Set<HcmStoreListener>();
 
-  function emit(cell: BalanceCell): void {
+  function emit(event: HcmStoreEvent): void {
     for (const listener of listeners) {
       try {
-        listener(cell);
+        listener(event);
       } catch {
         // One broken SSE connection must never poison the others.
       }
@@ -118,7 +125,7 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
     requestSequence = 0;
     // Live clients must converge on the fresh seed (e2e resets mid-session).
     for (const cell of cells.values()) {
-      emit(cell);
+      emit({ type: "cell", cell });
     }
   }
 
@@ -130,7 +137,7 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
       updatedAt: now().toISOString(),
     };
     cells.set(cellKeyOf(cell.employeeId, cell.locationId), next);
-    emit(next);
+    emit({ type: "cell", cell: next });
     return next;
   }
 
@@ -189,10 +196,12 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
       // the per-cell verification read is the only thing that can catch this.
       if (input.chaos === "wrong-success") {
         requests.set(record.id, record);
+        emit({ type: "request", request: record });
         return { ok: true, value: record };
       }
 
       requests.set(record.id, record);
+      emit({ type: "request", request: record });
       mutateCell(cell, -input.days);
       return { ok: true, value: record };
     },
@@ -230,6 +239,7 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
         decidedAt: now().toISOString(),
       };
       requests.set(id, decided);
+      emit({ type: "request", request: decided });
 
       // Approve keeps the hold (already debited at filing); deny refunds it.
       if (decision === "deny") {

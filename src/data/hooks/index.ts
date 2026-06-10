@@ -15,4 +15,4 @@ export {
   type SubmitRequestVariables,
 } from "./useSubmitRequest";
 export { useTriggerAnniversary } from "./useTriggerAnniversary";
-export { useRealtimeBalances } from "./useRealtimeBalances";
+export { useRealtimeHcm } from "./useRealtimeHcm";

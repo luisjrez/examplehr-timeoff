@@ -13,7 +13,7 @@ import { reconcileRealtimeEvent } from "../realtime";
  * UI can disclose its data-freshness mode — when it is down, the corpus
  * poll is still reconciling, just slower.
  */
-export function useRealtimeBalances(): { readonly live: boolean } {
+export function useRealtimeHcm(): { readonly live: boolean } {
   const queryClient = useQueryClient();
   const notify = useNotificationsStore((s) => s.push);
   const [live, setLive] = useState(false);
