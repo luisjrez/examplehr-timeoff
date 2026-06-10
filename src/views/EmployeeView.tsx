@@ -15,6 +15,7 @@ import {
   useCorpusReconciliation,
   useDecisionSync,
   useLedgerRequests,
+  useRealtimeBalances,
   useRequestRecovery,
   useSubmitRequest,
   useTriggerAnniversary,
@@ -67,6 +68,7 @@ function BalanceSection({
  */
 export function EmployeeView(): ReactElement {
   const { hydrated } = useCorpusReconciliation();
+  const { live } = useRealtimeBalances();
   useDecisionSync();
   const queryClient = useQueryClient();
   const { submit, isSubmitting } = useSubmitRequest();
@@ -130,8 +132,18 @@ export function EmployeeView(): ReactElement {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">My time off</h1>
-          <p className="text-sm text-gray-600">
+          <p className="flex items-center gap-2 text-sm text-gray-600">
             {EMPLOYEE_DIRECTORY[CURRENT_EMPLOYEE]}
+            {/* Disclose the freshness mode: SSE push vs polling fallback. */}
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                live
+                  ? "bg-emerald-100 text-emerald-800"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {live ? "● Live" : "○ Polling"}
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 p-2 text-xs">

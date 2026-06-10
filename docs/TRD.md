@@ -138,6 +138,15 @@ When a reconciliation (corpus or cell read) changes a confirmed value while the 
 - `staleness` derives from `confirmed.updatedAt` age: `fresh < 30s ≤ aging < 2min ≤ stale`. Stale cells render a visible badge; the UI never blocks on HCM.
 - Writes carry `expectedVersion` (compare-and-swap). A `409` is a first-class domain event (→ `contradicted`), not an exception.
 
+### 6.6 Real-time push (SSE)
+
+Polling alone leaves a window of up to 60s where an external mutation (bonus, a manager deciding elsewhere) is invisible. The mock HCM therefore also exposes `GET /api/hcm/events` — a **Server-Sent Events** stream of confirmed cell changes — and the employee view subscribes (`useRealtimeBalances`).
+
+- **Same merge rules as the corpus** (`reconcileRealtimeEvent`): versions win over arrival order, never regress a cell. SSE is a faster delivery path for the same truth, not a second source of truth.
+- **Narration is provenance-aware**: external changes toast ("Balance updated by HCM"); changes explained by this session's own in-flight request stay silent — the SSE echo of your own write can beat the verification read, and toasting your own action is noise.
+- **Graceful degradation**: the corpus poll remains the safety net. The UI discloses its freshness mode ("● Live" / "○ Polling"). On serverless the stream is cut at function timeout; EventSource auto-reconnects.
+- _Alternatives_: WebSocket (bidirectional — unneeded, HCM only pushes; heavier infra) and long-polling (worse latency/cost). SSE is the minimal primitive that fits a one-way feed.
+
 ## 7. Manager Decision Integrity (C5)
 
 Opening a pending request's decision panel triggers a **fresh authoritative cell read** (`staleTime: 0`); Approve/Deny stay disabled until it lands, and the approval payload carries the `version` from that read. If HCM's version has advanced by approval time, the mock returns `409`, the panel re-reads and re-arms with the new balance. The guarantee is structural (CAS), not temporal ("we fetched recently").
@@ -174,6 +183,7 @@ The mock's brain is a **pure module** (`src/mocks/hcm-store.ts`, framework-free)
 | `POST /api/hcm/requests`, `PATCH /api/hcm/requests/[id]` | Request lifecycle; approve debits via CAS                                                              |
 | `POST /api/hcm/triggers/anniversary`                     | Fires the bonus deterministically (tests/stories); a timer drives it in demo mode (`HCM_DEMO_CHAOS=1`) |
 | `POST /api/hcm/reset`                                    | Re-seed; test isolation                                                                                |
+| `GET /api/hcm/events`                                    | SSE stream of confirmed-cell changes (§6.6)                                                            |
 
 **Determinism by injection:** chaos is requested per call via the `x-chaos` header — `silent-failure` (200, no effect), `wrong-success` (200, wrong effect), `conflict`, `latency:<ms>`, `error`. Tests inject exactly the failure under test; demo mode rolls probabilities. This is the difference between "we have chaos" and "we can _prove_ behavior under chaos."
 

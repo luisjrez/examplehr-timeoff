@@ -134,5 +134,9 @@ export function buildHcmHandlers(
       store.reset();
       return HttpResponse.json({ ok: true });
     }),
+
+    // Per the SSE spec a 204 tells EventSource to close permanently —
+    // Storybook/tests fall back to polling instead of hammering reconnects.
+    http.get("/api/hcm/events", () => new HttpResponse(null, { status: 204 })),
   ];
 }

@@ -58,15 +58,16 @@ the cell moved. Manager approvals are gated the same way (TRD §7).
 
 ## Layer map (import rules are law)
 
-| Folder            | Contains                                                       | May import          | Must NOT contain        |
-| ----------------- | -------------------------------------------------------------- | ------------------- | ----------------------- |
-| `src/domain/`     | FSM, projection, types — pure functions                        | nothing app-level   | React, IO, fetch        |
-| `src/data/`       | hcmApi client, query keys, flows, ledger, notifications, hooks | domain              | JSX                     |
-| `src/components/` | Presentational: props in → JSX out                             | domain (types)      | fetching, global stores |
-| `src/views/`      | Containers wiring data hooks to components                     | data, components    | business math           |
-| `src/mocks/`      | HCM brain + two transports (route handlers use it, MSW too)    | domain (wire types) | app imports             |
-| `src/app/`        | Pages + `/api/hcm/*` route handlers (thin over `src/mocks`)    | views, mocks        | logic worth testing     |
-| `e2e/`            | Playwright specs                                               | —                   | —                       |
+| Folder            | Contains                                                     | May import          | Must NOT contain         |
+| ----------------- | ------------------------------------------------------------ | ------------------- | ------------------------ |
+| `src/domain/`     | FSM, projection, types — pure functions                      | nothing app-level   | React, IO, fetch         |
+| `src/data/`       | hcmApi client, query keys, flows, ledger, notifications      | domain              | JSX                      |
+| `src/data/hooks/` | React bindings — **one hook per file**, barrel in `index.ts` | data, domain        | logic worth unit-testing |
+| `src/components/` | Presentational: props in → JSX out                           | domain (types)      | fetching, global stores  |
+| `src/views/`      | Containers wiring data hooks to components                   | data, components    | business math            |
+| `src/mocks/`      | HCM brain + two transports (route handlers use it, MSW too)  | domain (wire types) | app imports              |
+| `src/app/`        | Pages + `/api/hcm/*` route handlers (thin over `src/mocks`)  | views, mocks        | logic worth testing      |
+| `e2e/`            | Playwright specs                                             | —                   | —                        |
 
 ## Hard rules (enforced by ESLint/tsc — CI fails on violation)
 
@@ -122,9 +123,10 @@ pnpm lint / typecheck / build
    `buildHcmHandlers(createHcmStore())`. Mock only the network boundary.
 2. Implement the orchestration as a **framework-free function** taking deps
    (`{ queryClient, ledger, notify }`) — see `submitFlow.ts`/`decideFlow.ts`.
-3. Expose a thin hook in `src/data/hooks.ts`; query keys only via
-   `src/data/queryKeys.ts`. Cache writes go through `mergeCell`/`applyCorpus`
-   (never regress a cell version).
+3. Expose a thin hook as its own file under `src/data/hooks/` (one hook per
+   file) and re-export it from `src/data/hooks/index.ts`; query keys only via
+   `src/data/queryKeys.ts`. Cache writes go through `mergeCell`/`applyCorpus`/
+   `reconcileRealtimeEvent` (never regress a cell version).
 
 ### Add/modify an FSM state
 
@@ -207,6 +209,16 @@ quality (prettier → eslint → typecheck → unit → storybook → e2e → bu
   are uploaded as run artifacts.
 - The mock HCM is in-memory: Vercel cold starts re-seed it (fine for the
   demo, documented in TRD §11). `HCM_DEMO_CHAOS=1` enables ambient chaos.
+
+### Real-time (SSE)
+
+`GET /api/hcm/events` streams confirmed-cell changes (the store's
+`subscribe()` feeds it). The client folds events via `reconcileRealtimeEvent`
+— same no-version-regression rule as the corpus, and it stays SILENT for
+changes explained by the session's own in-flight requests (the echo of your
+own write must not toast). MSW answers this route with **204** so EventSource
+closes permanently in Storybook/tests and the UI falls back to polling.
+If you add store mutations, route them through `mutateCell` so they emit.
 
 ## Repo-specific gotchas
 

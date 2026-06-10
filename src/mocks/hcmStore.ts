@@ -40,8 +40,16 @@ export interface FileRequestInput {
   readonly chaos?: ChaosMode;
 }
 
+/** Listener for cell mutations — feeds the real-time SSE endpoint. */
+export type CellListener = (cell: BalanceCell) => void;
+
 export interface HcmStore {
   getCell(employeeId: string, locationId: string): BalanceCell | undefined;
+  /**
+   * Subscribe to confirmed-cell changes (debits, refunds, bonuses, re-seeds).
+   * Only actual mutations emit — rejected writes change nothing and are silent.
+   */
+  subscribe(listener: CellListener): () => void;
   getCorpus(): readonly BalanceCell[];
   fileRequest(input: FileRequestInput): HcmResult<HcmRequestRecord>;
   getRequest(id: string): HcmRequestRecord | undefined;
@@ -83,6 +91,17 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
   let cells = new Map<CellKey, BalanceCell>();
   let requests = new Map<string, HcmRequestRecord>();
   let requestSequence = 0;
+  const listeners = new Set<CellListener>();
+
+  function emit(cell: BalanceCell): void {
+    for (const listener of listeners) {
+      try {
+        listener(cell);
+      } catch {
+        // One broken SSE connection must never poison the others.
+      }
+    }
+  }
 
   function seed(): void {
     cells = new Map(
@@ -97,6 +116,10 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
     );
     requests = new Map();
     requestSequence = 0;
+    // Live clients must converge on the fresh seed (e2e resets mid-session).
+    for (const cell of cells.values()) {
+      emit(cell);
+    }
   }
 
   function mutateCell(cell: BalanceCell, daysDelta: number): BalanceCell {
@@ -107,6 +130,7 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
       updatedAt: now().toISOString(),
     };
     cells.set(cellKeyOf(cell.employeeId, cell.locationId), next);
+    emit(next);
     return next;
   }
 
@@ -127,6 +151,13 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
   return {
     getCell(employeeId, locationId) {
       return cells.get(cellKeyOf(employeeId, locationId));
+    },
+
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
 
     getCorpus() {

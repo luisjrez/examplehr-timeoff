@@ -61,6 +61,10 @@ Route handlers under `/api/hcm/*` and MSW handlers share one in-memory brain
 `wrong-success`, `conflict`, `error`, `latency:<ms>`). Demo mode
 (`HCM_DEMO_CHAOS=1`) rolls dice instead; explicit headers always win.
 
+It also pushes **real-time updates**: `GET /api/hcm/events` streams confirmed
+cell changes over SSE; the employee view subscribes and reconciles instantly
+(the "● Live" badge), with the corpus poll as the fallback (TRD §6.6).
+
 ```bash
 curl -X POST localhost:3000/api/hcm/requests \
   -H 'content-type: application/json' -H 'x-chaos: silent-failure' \
