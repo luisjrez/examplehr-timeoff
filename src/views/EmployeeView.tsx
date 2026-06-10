@@ -14,6 +14,7 @@ import {
   useBalanceCell,
   useCorpusReconciliation,
   useDecisionSync,
+  useLedgerRehydration,
   useLedgerRequests,
   useRealtimeHcm,
   useRequestRecovery,
@@ -74,6 +75,7 @@ export function EmployeeView(): ReactElement {
   const { hydrated } = useCorpusReconciliation();
   const { live } = useRealtimeHcm();
   useDecisionSync();
+  useLedgerRehydration();
   const queryClient = useQueryClient();
   const { submit, isSubmitting } = useSubmitRequest();
   const { retry, discard } = useRequestRecovery();

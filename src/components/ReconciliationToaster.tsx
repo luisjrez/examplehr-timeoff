@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, type ReactElement } from "react";
+import { useCallback, useEffect, type ReactElement } from "react";
 
 import {
   useNotificationsStore,
@@ -21,6 +21,9 @@ const KIND_STYLES: Readonly<Record<NotificationKind, string>> = {
     "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200",
 };
 
+/** Toasts narrate transitions; they should not require manual cleanup. */
+export const TOAST_AUTO_DISMISS_MS = 6_000;
+
 interface ToastProps {
   readonly notification: AppNotification;
   readonly onDismiss: (id: string) => void;
@@ -30,6 +33,12 @@ function Toast({ notification, onDismiss }: ToastProps): ReactElement {
   const handleDismiss = useCallback(() => {
     onDismiss(notification.id);
   }, [onDismiss, notification.id]);
+
+  // Each toast dismisses on its own clock; manual close stays available.
+  useEffect(() => {
+    const timer = setTimeout(handleDismiss, TOAST_AUTO_DISMISS_MS);
+    return () => clearTimeout(timer);
+  }, [handleDismiss]);
 
   return (
     <div

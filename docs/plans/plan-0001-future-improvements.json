@@ -2,12 +2,13 @@
   "id": "plan-0001",
   "title": "Production-readiness roadmap",
   "spec": "docs/FUTURE.md + docs/TRD.md §11 (risks) and §13 (security production path)",
-  "status": "approved",
+  "status": "in_progress",
   "createdAt": "2026-06-10T21:00:00Z",
-  "updatedAt": "2026-06-10T21:00:00Z",
+  "updatedAt": "2026-06-10T22:05:00Z",
   "notes": [
     "Phases 1-3 are independent by artifacts and may be dispatched to parallel agents.",
-    "Phase 5 intentionally depends on auth (phase 1): scoping the SSE feed is meaningless without an identity to scope to."
+    "Phase 5 intentionally depends on auth (phase 1): scoping the SSE feed is meaningless without an identity to scope to.",
+    "phase-2 executed 2026-06-10 (user-reported: reload wiped My requests while the hold stayed at HCM). Implemented with zustand/persist + boot reconciliation; e2e/session.spec.ts covers reload mid-flight and decide-while-away."
   ],
   "phases": [
     {
@@ -49,24 +50,24 @@
       "goal": "Survive reloads: persist the pending overlay (Zustand persist → localStorage) so an employee's in-flight requests outlive a refresh (TRD §11 known limitation).",
       "dependsOn": [],
       "parallelizable": true,
-      "status": "pending",
+      "status": "completed",
       "tasks": [
         {
           "id": "t1",
           "description": "Failing test: ledger rehydrates from storage; contradicted/pre-confirmation phases reconcile against HCM records on boot (a request that verified while we were away must not double-hold).",
-          "status": "pending",
+          "status": "completed",
           "verification": "pnpm test"
         },
         {
           "id": "t2",
           "description": "Add zustand/persist to requestLedger with a boot-time reconciliation pass (reuse syncDecisions + verification reads).",
-          "status": "pending",
+          "status": "completed",
           "verification": "pnpm test && pnpm test:e2e"
         },
         {
           "id": "t3",
           "description": "E2E: file → reload → request still visible with correct phase.",
-          "status": "pending",
+          "status": "completed",
           "verification": "pnpm test:e2e"
         }
       ],

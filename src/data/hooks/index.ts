@@ -7,6 +7,7 @@ export { useBalanceCell } from "./useBalanceCell";
 export { useCorpusReconciliation } from "./useCorpusReconciliation";
 export { useDecideRequest, type DecideVariables } from "./useDecideRequest";
 export { useDecisionSync } from "./useDecisionSync";
+export { useLedgerRehydration } from "./useLedgerRehydration";
 export { useLedgerRequests } from "./useLedgerRequests";
 export { usePendingRequests } from "./usePendingRequests";
 export { useRequestRecovery } from "./useRequestRecovery";
