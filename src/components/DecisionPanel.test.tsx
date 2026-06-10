@@ -46,9 +46,34 @@ describe("DecisionPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/9/)).toBeInTheDocument();
+    expect(screen.getByText("9")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /approve/i })).toBeEnabled();
     expect(screen.getByRole("button", { name: /deny/i })).toBeEnabled();
+  });
+
+  it("should spell out both decision outcomes (hold semantics made legible)", () => {
+    // The 3 requested days are already held, so the shown balance (9) will
+    // NOT move on approval, and a denial refunds back to 12. Without this
+    // line, 'nothing changed after approve' reads like a bug.
+    render(
+      <DecisionPanel
+        request={REQUEST}
+        cellView={view(9)}
+        isCellLoading={false}
+        isDeciding={false}
+        conflict={false}
+        onApprove={noop}
+        onDeny={noop}
+      />,
+    );
+
+    expect(
+      screen.getByText(/3 day\(s\) requested are already on hold/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/approve keeps the balance at 9/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/deny refunds it to 12/i)).toBeInTheDocument();
   });
 
   it("should keep decisions disabled until the fresh balance read lands", () => {

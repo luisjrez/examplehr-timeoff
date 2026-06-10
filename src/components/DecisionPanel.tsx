@@ -63,6 +63,17 @@ export function DecisionPanel({
         )}
       </div>
 
+      {!isCellLoading && cellView.confirmed ? (
+        // Hold semantics made legible (the user-reported confusion): the
+        // requested days were deducted at filing, so approving does NOT move
+        // the number and denying refunds it. Spell out both outcomes.
+        <p className="text-xs text-gray-600 dark:text-zinc-300">
+          The {request.days} day(s) requested are already on hold. Approve keeps
+          the balance at {cellView.confirmed.days} · Deny refunds it to{" "}
+          {cellView.confirmed.days + request.days}.
+        </p>
+      ) : null}
+
       {conflict ? (
         <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
           The balance changed since you opened this request — the numbers above

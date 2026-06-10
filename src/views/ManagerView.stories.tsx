@@ -96,9 +96,15 @@ export const PendingWithBalanceContext: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(async () => {
-      await expect(canvas.getByText(/3 day\(s\)/i)).toBeInTheDocument();
+      // "3 day(s)" appears in the header AND in the outcome-preview line.
+      const mentions = canvas.getAllByText(/3 day\(s\)/i);
+      await expect(mentions.length).toBeGreaterThanOrEqual(1);
       // Balance right now: 9 (12 seeded − 3 held at filing).
       await expect(canvas.getByText("9")).toBeInTheDocument();
+      // Hold semantics spelled out at decision time.
+      await expect(
+        canvas.getByText(/deny refunds it to 12/i),
+      ).toBeInTheDocument();
     });
     await expect(
       canvas.getByRole("button", { name: /approve/i }),
