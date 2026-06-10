@@ -1,0 +1,226 @@
+import { cellKeyOf, type BalanceCell, type CellKey } from "@/domain/types";
+
+/**
+ * The brain of the mock HCM (TRD §9). Pure TypeScript, framework-free, so the
+ * exact same logic backs the Next.js route handlers (app, e2e, deployed demo)
+ * and the MSW handlers (Storybook, unit tests). One brain, zero drift.
+ *
+ * Chaos is injected per call, never rolled randomly here — randomness would
+ * make the test harness untrustworthy. Demo mode rolls its dice in the HTTP
+ * layer and passes the outcome down as an explicit `chaos` argument.
+ */
+
+export type ChaosMode = "silent-failure" | "wrong-success" | "conflict";
+
+export type HcmErrorCode =
+  | "version_conflict"
+  | "insufficient_balance"
+  | "invalid_dimensions"
+  | "not_found"
+  | "not_pending";
+
+export type HcmResult<T> =
+  | { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly error: HcmErrorCode };
+
+export type HcmRequestStatus = "pending" | "approved" | "denied";
+
+/** A time-off request as HCM records it (server-side view, no client FSM). */
+export interface HcmRequestRecord {
+  readonly id: string;
+  readonly employeeId: string;
+  readonly locationId: string;
+  readonly days: number;
+  readonly status: HcmRequestStatus;
+  readonly filedAt: string;
+  readonly decidedAt?: string;
+}
+
+export interface FileRequestInput {
+  readonly employeeId: string;
+  readonly locationId: string;
+  readonly days: number;
+  /** CAS guard: the cell version the client believes is current. */
+  readonly expectedVersion: number;
+  readonly chaos?: ChaosMode;
+}
+
+export interface HcmStore {
+  getCell(employeeId: string, locationId: string): BalanceCell | undefined;
+  getCorpus(): readonly BalanceCell[];
+  fileRequest(input: FileRequestInput): HcmResult<HcmRequestRecord>;
+  getRequest(id: string): HcmRequestRecord | undefined;
+  listRequests(status?: HcmRequestStatus): readonly HcmRequestRecord[];
+  decideRequest(
+    id: string,
+    decision: "approve" | "deny",
+    expectedCellVersion: number,
+  ): HcmResult<HcmRequestRecord>;
+  /** Work-anniversary bonus: +1 day on every cell of the employee. */
+  triggerAnniversary(employeeId: string): readonly BalanceCell[];
+  reset(): void;
+}
+
+interface SeedCell {
+  readonly employeeId: string;
+  readonly locationId: string;
+  readonly days: number;
+}
+
+/** Deterministic seed — balances are per-employee, per-location (multiple rows). */
+const SEED_CELLS: readonly SeedCell[] = [
+  { employeeId: "emp-alice", locationId: "loc-mx", days: 12 },
+  { employeeId: "emp-alice", locationId: "loc-us", days: 5 },
+  { employeeId: "emp-bob", locationId: "loc-mx", days: 8 },
+];
+
+export const EMPLOYEE_DIRECTORY: Readonly<Record<string, string>> = {
+  "emp-alice": "Alice Hernández",
+  "emp-bob": "Bob Castillo",
+};
+
+export const LOCATION_DIRECTORY: Readonly<Record<string, string>> = {
+  "loc-mx": "Mexico City",
+  "loc-us": "Austin, TX",
+};
+
+export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
+  let cells = new Map<CellKey, BalanceCell>();
+  let requests = new Map<string, HcmRequestRecord>();
+  let requestSequence = 0;
+
+  function seed(): void {
+    cells = new Map(
+      SEED_CELLS.map((cell) => [
+        cellKeyOf(cell.employeeId, cell.locationId),
+        {
+          ...cell,
+          version: 1,
+          updatedAt: now().toISOString(),
+        },
+      ]),
+    );
+    requests = new Map();
+    requestSequence = 0;
+  }
+
+  function mutateCell(cell: BalanceCell, daysDelta: number): BalanceCell {
+    const next: BalanceCell = {
+      ...cell,
+      days: cell.days + daysDelta,
+      version: cell.version + 1,
+      updatedAt: now().toISOString(),
+    };
+    cells.set(cellKeyOf(cell.employeeId, cell.locationId), next);
+    return next;
+  }
+
+  function buildRequest(input: FileRequestInput): HcmRequestRecord {
+    requestSequence += 1;
+    return {
+      id: `req-${String(requestSequence).padStart(4, "0")}`,
+      employeeId: input.employeeId,
+      locationId: input.locationId,
+      days: input.days,
+      status: "pending",
+      filedAt: now().toISOString(),
+    };
+  }
+
+  seed();
+
+  return {
+    getCell(employeeId, locationId) {
+      return cells.get(cellKeyOf(employeeId, locationId));
+    },
+
+    getCorpus() {
+      return [...cells.values()];
+    },
+
+    fileRequest(input) {
+      const cell = cells.get(cellKeyOf(input.employeeId, input.locationId));
+      if (!cell) {
+        return { ok: false, error: "invalid_dimensions" };
+      }
+      if (input.chaos === "conflict" || cell.version !== input.expectedVersion) {
+        return { ok: false, error: "version_conflict" };
+      }
+      if (input.days <= 0 || cell.days < input.days) {
+        return { ok: false, error: "insufficient_balance" };
+      }
+
+      const record = buildRequest(input);
+
+      // silent-failure: the response will say "created" but HCM kept nothing.
+      if (input.chaos === "silent-failure") {
+        return { ok: true, value: record };
+      }
+      // wrong-success: the request exists but the hold was never applied —
+      // the per-cell verification read is the only thing that can catch this.
+      if (input.chaos === "wrong-success") {
+        requests.set(record.id, record);
+        return { ok: true, value: record };
+      }
+
+      requests.set(record.id, record);
+      mutateCell(cell, -input.days);
+      return { ok: true, value: record };
+    },
+
+    getRequest(id) {
+      return requests.get(id);
+    },
+
+    listRequests(status) {
+      const all = [...requests.values()];
+      return status ? all.filter((r) => r.status === status) : all;
+    },
+
+    decideRequest(id, decision, expectedCellVersion) {
+      const request = requests.get(id);
+      if (!request) {
+        return { ok: false, error: "not_found" };
+      }
+      if (request.status !== "pending") {
+        return { ok: false, error: "not_pending" };
+      }
+      const cell = cells.get(cellKeyOf(request.employeeId, request.locationId));
+      if (!cell) {
+        return { ok: false, error: "invalid_dimensions" };
+      }
+      // Decision integrity (TRD §7): a manager may only decide against the
+      // exact balance they were shown. If HCM moved on, they must re-read.
+      if (cell.version !== expectedCellVersion) {
+        return { ok: false, error: "version_conflict" };
+      }
+
+      const decided: HcmRequestRecord = {
+        ...request,
+        status: decision === "approve" ? "approved" : "denied",
+        decidedAt: now().toISOString(),
+      };
+      requests.set(id, decided);
+
+      // Approve keeps the hold (already debited at filing); deny refunds it.
+      if (decision === "deny") {
+        mutateCell(cell, request.days);
+      }
+      return { ok: true, value: decided };
+    },
+
+    triggerAnniversary(employeeId) {
+      const affected: BalanceCell[] = [];
+      for (const cell of cells.values()) {
+        if (cell.employeeId === employeeId) {
+          affected.push(mutateCell(cell, 1));
+        }
+      }
+      return affected;
+    },
+
+    reset() {
+      seed();
+    },
+  };
+}
