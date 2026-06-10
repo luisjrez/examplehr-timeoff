@@ -92,11 +92,12 @@ jobs:
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           onlyChanged: true
+          # Snapshots are deterministic (frozen clock + static story dates),
+          # so a diff here means a REAL visual change: intentional ones get
+          # accepted once in the Chromatic UI; regressions get caught.
+          # exitZeroOnChanges keeps the pipeline green while review happens —
+          # the Chromatic check itself carries the visual verdict.
           exitZeroOnChanges: true
-          # main IS the baseline: deploys here already passed the quality
-          # gate (incl. 34 interaction tests), so visual changes self-accept.
-          # Manual review remains the flow for PR builds.
-          autoAcceptChanges: main
 
   deploy-vercel:
     runs-on: ubuntu-latest

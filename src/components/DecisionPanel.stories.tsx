@@ -24,7 +24,7 @@ const REQUEST: HcmRequestRecord = {
   locationId: "loc-mx",
   days: 3,
   status: "pending",
-  filedAt: new Date().toISOString(),
+  filedAt: "2026-06-10T11:59:30.000Z",
 };
 
 function cellView(days: number): BalanceCellView {
@@ -34,7 +34,7 @@ function cellView(days: number): BalanceCellView {
       locationId: "loc-mx",
       days,
       version: 4,
-      updatedAt: new Date().toISOString(),
+      updatedAt: "2026-06-10T11:59:30.000Z",
     },
     pending: [],
     projected: days,

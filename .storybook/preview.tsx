@@ -1,4 +1,5 @@
 import type { Preview } from "@storybook/nextjs-vite";
+import isChromatic from "chromatic/isChromatic";
 import { initialize, mswLoader } from "msw-storybook-addon";
 
 import { appLedger } from "../src/data/requestLedger";
@@ -18,10 +19,9 @@ initialize({ onUnhandledRequest: "bypass" });
 const FROZEN_NOW = new Date("2026-06-10T12:00:00Z").valueOf();
 
 function freezeClockForChromatic(): void {
-  if (
-    typeof window === "undefined" ||
-    !/Chromatic/.test(window.navigator.userAgent)
-  ) {
+  // Official detection (chromatic/isChromatic) instead of hand-rolled UA
+  // sniffing — this is the documented Chromatic recipe for date stability.
+  if (!isChromatic()) {
     return;
   }
   const RealDate = Date;

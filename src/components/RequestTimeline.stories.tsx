@@ -43,7 +43,7 @@ function request(phase: RequestPhase): {
     locationId: "loc-mx",
     days: 2,
     phase,
-    createdAt: new Date().toISOString(),
+    createdAt: "2026-06-10T11:59:30.000Z",
   };
 }
 

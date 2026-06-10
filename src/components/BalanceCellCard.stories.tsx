@@ -21,7 +21,7 @@ const CONFIRMED = {
   locationId: "loc-mx",
   days: 10,
   version: 3,
-  updatedAt: new Date().toISOString(),
+  updatedAt: "2026-06-10T11:59:30.000Z",
 } as const;
 
 function holdingRequest(days: number): TimeOffRequest {
@@ -31,7 +31,7 @@ function holdingRequest(days: number): TimeOffRequest {
     locationId: "loc-mx",
     days,
     phase: { status: "verifying" },
-    createdAt: new Date().toISOString(),
+    createdAt: "2026-06-10T11:59:30.000Z",
   };
 }
 
