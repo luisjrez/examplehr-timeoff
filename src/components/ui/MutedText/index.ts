@@ -1,0 +1,1 @@
+export { MutedText } from "./MutedText";

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactElement } from "react";
 import type { BalanceCellView } from "@/domain/types";
 
 import { ProvenanceBadge } from "../ProvenanceBadge";
+import { Card } from "../ui/Card";
 import { BalanceCellSkeleton } from "./BalanceCellSkeleton";
 
 interface BalanceCellCardProps {
@@ -64,7 +65,7 @@ export function BalanceCellCard({
   const verifying = heldDays > 0;
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-zinc-700 p-4">
+    <Card rounded="xl" padding="4">
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700 dark:text-zinc-200">
           {locationName}
@@ -96,6 +97,6 @@ export function BalanceCellCard({
       ) : (
         <p className="mt-1 text-[11px] text-red-500">never confirmed by HCM</p>
       )}
-    </div>
+    </Card>
   );
 }

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { Skeleton } from "../Skeleton";
+import { Card } from "../ui/Card";
 
 /**
  * Loading placeholder for a pending-request decision card (manager queue).
@@ -8,10 +9,12 @@ import { Skeleton } from "../Skeleton";
  */
 export function DecisionPanelSkeleton(): ReactElement {
   return (
-    <div
+    <Card
+      rounded="lg"
+      padding="4"
+      className="flex flex-col gap-3"
       role="status"
       aria-label="Loading pending request"
-      className="flex flex-col gap-3 rounded-lg border border-gray-200 dark:border-zinc-700 p-4"
     >
       <Skeleton className="h-4 w-2/3" />
       <Skeleton className="h-9 w-full" />
@@ -19,6 +22,6 @@ export function DecisionPanelSkeleton(): ReactElement {
         <Skeleton className="h-8 w-24 rounded-md" />
         <Skeleton className="h-8 w-24 rounded-md" />
       </div>
-    </div>
+    </Card>
   );
 }

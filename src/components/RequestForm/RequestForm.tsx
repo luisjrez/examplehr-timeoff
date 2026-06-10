@@ -7,6 +7,10 @@ import {
   type ReactElement,
 } from "react";
 
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
+import { FormField } from "../ui/FormField";
+
 export interface RequestFormLocation {
   readonly id: string;
   readonly name: string;
@@ -54,7 +58,7 @@ export function RequestForm({
   }, []);
 
   const handleSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
+    (event: FormEvent<HTMLElement>) => {
       event.preventDefault();
       const days = Number(daysText);
       if (!Number.isInteger(days) || days <= 0 || locationId === "") {
@@ -66,17 +70,12 @@ export function RequestForm({
   );
 
   return (
-    <form
+    <Card
+      as="form"
       onSubmit={handleSubmit}
-      className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 dark:border-zinc-700 p-4"
+      className="flex flex-wrap items-end gap-3"
     >
-      <div className="flex flex-col gap-1">
-        <label
-          htmlFor="rf-location"
-          className="text-xs text-gray-600 dark:text-zinc-300"
-        >
-          Location
-        </label>
+      <FormField label="Location" htmlFor="rf-location">
         <select
           id="rf-location"
           value={locationId}
@@ -89,15 +88,9 @@ export function RequestForm({
             </option>
           ))}
         </select>
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-1">
-        <label
-          htmlFor="rf-days"
-          className="text-xs text-gray-600 dark:text-zinc-300"
-        >
-          Days
-        </label>
+      <FormField label="Days" htmlFor="rf-days">
         <input
           id="rf-days"
           type="number"
@@ -107,15 +100,11 @@ export function RequestForm({
           onChange={handleDaysChange}
           className="w-20 rounded-md border border-gray-300 dark:border-zinc-600 px-2 py-1.5 text-sm"
         />
-      </div>
+      </FormField>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-      >
+      <Button variant="primary" type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Submitting…" : "Request time off"}
-      </button>
-    </form>
+      </Button>
+    </Card>
   );
 }

@@ -4,6 +4,8 @@ import { useCallback, useEffect, type ReactElement } from "react";
 
 import type { AppNotification, NotificationKind } from "@/data/notifications";
 
+import { Button } from "../ui/Button";
+
 const KIND_STYLES: Readonly<Record<NotificationKind, string>> = {
   balance_changed:
     "border-blue-300 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200",
@@ -42,14 +44,15 @@ export function Toast({ notification, onDismiss }: ToastProps): ReactElement {
       className={`pointer-events-auto flex items-start gap-2 rounded-lg border p-3 text-sm shadow-sm ${KIND_STYLES[notification.kind]}`}
     >
       <p className="flex-1">{notification.message}</p>
-      <button
-        type="button"
+      <Button
+        variant="plain"
+        size="none"
         onClick={handleDismiss}
         aria-label="Dismiss notification"
         className="text-xs opacity-60 hover:opacity-100"
       >
         ✕
-      </button>
+      </Button>
     </div>
   );
 }

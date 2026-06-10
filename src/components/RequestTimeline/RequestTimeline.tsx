@@ -4,6 +4,10 @@ import { useCallback, type ReactElement } from "react";
 
 import type { RequestPhase, TimeOffRequest } from "@/domain/types";
 
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
+import { Chip } from "../ui/Chip";
+
 interface RequestTimelineProps {
   readonly request: TimeOffRequest;
   readonly locationName: string;
@@ -87,16 +91,14 @@ export function RequestTimeline({
   }, [onDiscard, request.id]);
 
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-zinc-700 p-3">
+    <Card as="li" rounded="lg" padding="3" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm">
           {request.days} day(s) · {locationName}
         </span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${TONE_STYLES[presentation.tone]}`}
-        >
+        <Chip className={TONE_STYLES[presentation.tone]}>
           {presentation.label}
-        </span>
+        </Chip>
       </div>
       {presentation.detail ? (
         <p className="text-xs text-gray-600 dark:text-zinc-300">
@@ -105,22 +107,14 @@ export function RequestTimeline({
       ) : null}
       {request.phase.status === "contradicted" ? (
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
-          >
+          <Button variant="primary" size="xs" onClick={handleRetry}>
             Retry with fresh balance
-          </button>
-          <button
-            type="button"
-            onClick={handleDiscard}
-            className="rounded-md border border-gray-300 dark:border-zinc-600 px-3 py-1 text-xs hover:bg-gray-50 dark:hover:bg-zinc-800"
-          >
+          </Button>
+          <Button variant="ghost" size="xs" onClick={handleDiscard}>
             Discard
-          </button>
+          </Button>
         </div>
       ) : null}
-    </li>
+    </Card>
   );
 }

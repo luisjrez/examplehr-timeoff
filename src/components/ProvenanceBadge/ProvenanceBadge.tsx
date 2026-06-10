@@ -2,6 +2,8 @@ import type { ReactElement } from "react";
 
 import type { Staleness } from "@/domain/types";
 
+import { Chip } from "../ui/Chip";
+
 interface ProvenanceBadgeProps {
   readonly staleness: Staleness;
 }
@@ -29,10 +31,6 @@ export function ProvenanceBadge({
   staleness,
 }: ProvenanceBadgeProps): ReactElement {
   return (
-    <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${BADGE_STYLES[staleness]}`}
-    >
-      {BADGE_LABELS[staleness]}
-    </span>
+    <Chip className={BADGE_STYLES[staleness]}>{BADGE_LABELS[staleness]}</Chip>
   );
 }

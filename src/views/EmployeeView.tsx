@@ -35,6 +35,10 @@ import {
 } from "@/components/RequestForm";
 import { RequestTimeline } from "@/components/RequestTimeline";
 import { ReconciliationToaster } from "@/components/ReconciliationToaster";
+import { SyncModeBadge } from "@/components/SyncModeBadge";
+import { Button } from "@/components/ui/Button";
+import { MutedText } from "@/components/ui/MutedText";
+import { ViewSection } from "@/components/ui/ViewSection";
 
 const CURRENT_EMPLOYEE = "emp-alice";
 
@@ -144,15 +148,7 @@ export function EmployeeView(): ReactElement {
           <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-zinc-300">
             {EMPLOYEE_DIRECTORY[CURRENT_EMPLOYEE]}
             {/* Disclose the freshness mode: SSE push vs periodic-sync fallback. */}
-            <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                live
-                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
-                  : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
-              }`}
-            >
-              {live ? "● Live" : "○ Periodic sync"}
-            </span>
+            <SyncModeBadge live={live} />
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 dark:border-zinc-600 p-2 text-xs">
@@ -172,18 +168,18 @@ export function EmployeeView(): ReactElement {
               </option>
             ))}
           </select>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="2xs"
             onClick={handleAnniversary}
             disabled={isTriggering}
-            className="rounded border border-gray-300 dark:border-zinc-600 px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-zinc-800 disabled:opacity-50"
           >
             🎉 Anniversary bonus
-          </button>
+          </Button>
         </div>
       </header>
 
-      <section aria-label="Balances">
+      <ViewSection ariaLabel="Balances">
         {!hydrated && locationIds.length === 0 ? (
           <div
             role="status"
@@ -195,9 +191,7 @@ export function EmployeeView(): ReactElement {
             <BalanceCellSkeleton />
           </div>
         ) : locationIds.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-zinc-400">
-            No balances found for this employee.
-          </p>
+          <MutedText>No balances found for this employee.</MutedText>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {locationIds.map((locationId) => (
@@ -209,18 +203,19 @@ export function EmployeeView(): ReactElement {
             ))}
           </div>
         )}
-      </section>
+      </ViewSection>
 
-      <section aria-label="New request" className="flex flex-col gap-2">
-        <h2 className="text-lg font-medium">Request time off</h2>
+      <ViewSection
+        ariaLabel="New request"
+        title="Request time off"
+        className="flex flex-col gap-2"
+      >
         {!hydrated && formLocations.length === 0 ? (
           // A form without location options is not actionable — skeleton
           // until the corpus hydrates (an empty corpus shows the message).
           <RequestFormSkeleton />
         ) : formLocations.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-zinc-400">
-            No locations available to request against.
-          </p>
+          <MutedText>No locations available to request against.</MutedText>
         ) : (
           <RequestForm
             locations={formLocations}
@@ -228,14 +223,15 @@ export function EmployeeView(): ReactElement {
             onSubmit={handleSubmit}
           />
         )}
-      </section>
+      </ViewSection>
 
-      <section aria-label="My requests" className="flex flex-col gap-2">
-        <h2 className="text-lg font-medium">My requests</h2>
+      <ViewSection
+        ariaLabel="My requests"
+        title="My requests"
+        className="flex flex-col gap-2"
+      >
         {sortedRequests.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-zinc-400">
-            Nothing requested this session.
-          </p>
+          <MutedText>Nothing requested this session.</MutedText>
         ) : (
           <ul className="flex flex-col gap-2">
             {sortedRequests.map((request) => (
@@ -251,7 +247,7 @@ export function EmployeeView(): ReactElement {
             ))}
           </ul>
         )}
-      </section>
+      </ViewSection>
 
       <ReconciliationToaster />
     </main>

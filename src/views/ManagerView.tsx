@@ -14,6 +14,9 @@ import {
   DecisionPanelSkeleton,
 } from "@/components/DecisionPanel";
 import { ReconciliationToaster } from "@/components/ReconciliationToaster";
+import { SyncModeBadge } from "@/components/SyncModeBadge";
+import { MutedText } from "@/components/ui/MutedText";
+import { ViewSection } from "@/components/ui/ViewSection";
 
 interface PendingRequestSectionProps {
   readonly request: HcmRequestRecord;
@@ -85,22 +88,14 @@ export function ManagerView(): ReactElement {
       <header>
         <h1 className="flex items-center gap-2 text-2xl font-semibold">
           Pending approvals
-          <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-              live
-                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
-                : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
-            }`}
-          >
-            {live ? "● Live" : "○ Periodic sync"}
-          </span>
+          <SyncModeBadge live={live} />
         </h1>
         <p className="text-sm text-gray-600 dark:text-zinc-300">
           Balances shown are read from HCM at decision time, not cached.
         </p>
       </header>
 
-      <section aria-label="Pending requests" className="flex flex-col gap-3">
+      <ViewSection ariaLabel="Pending requests" className="flex flex-col gap-3">
         {isLoading ? (
           <div role="status" aria-label="Loading pending requests">
             <span className="sr-only">Loading pending requests…</span>
@@ -110,15 +105,13 @@ export function ManagerView(): ReactElement {
             </div>
           </div>
         ) : requests.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-zinc-400">
-            No requests waiting for review.
-          </p>
+          <MutedText>No requests waiting for review.</MutedText>
         ) : (
           requests.map((request) => (
             <PendingRequestSection key={request.id} request={request} />
           ))
         )}
-      </section>
+      </ViewSection>
 
       <ReconciliationToaster />
     </main>

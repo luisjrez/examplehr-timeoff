@@ -4,6 +4,8 @@ import type { BalanceCellView, HcmRequestRecord } from "@/domain/types";
 
 import { ProvenanceBadge } from "../ProvenanceBadge";
 import { Skeleton } from "../Skeleton";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 
 interface DecisionPanelProps {
   readonly request: HcmRequestRecord;
@@ -33,7 +35,7 @@ export function DecisionPanel({
   const disabled = isCellLoading || isDeciding || !cellView.confirmed;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 dark:border-zinc-700 p-4">
+    <Card rounded="lg" padding="4" className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <p className="text-sm">
           <span className="font-medium">{request.employeeId}</span> requests{" "}
@@ -82,23 +84,18 @@ export function DecisionPanel({
       ) : null}
 
       <div className="flex gap-2">
-        <button
-          type="button"
+        <Button
+          variant="success"
+          size="sm"
           onClick={onApprove}
           disabled={disabled}
-          className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Approve
-        </button>
-        <button
-          type="button"
-          onClick={onDeny}
-          disabled={disabled}
-          className="rounded-md bg-red-600 px-4 py-1.5 text-sm text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        </Button>
+        <Button variant="danger" size="sm" onClick={onDeny} disabled={disabled}>
           Deny
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }
