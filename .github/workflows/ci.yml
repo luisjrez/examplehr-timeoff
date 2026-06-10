@@ -41,17 +41,19 @@ jobs:
       - name: Unit & integration tests
         run: pnpm test
 
+      - name: Production build
+        run: pnpm build
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
 
       - name: Storybook interaction tests
         run: pnpm test:storybook
 
-      - name: E2E (Playwright vs real route handlers)
+      # E2E runs against `next start` on the build above — no dev-mode
+      # on-demand compilation, no cold-route flakes.
+      - name: E2E (Playwright vs production server)
         run: pnpm test:e2e
-
-      - name: Production build
-        run: pnpm build
 
       # Forensic evidence for the auto-filed regression issue: HTML report,
       # traces and videos of the failing specs.

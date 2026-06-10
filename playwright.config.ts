@@ -2,9 +2,10 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 3100;
 
-// E2E runs against a real `next dev` server so the mock HCM route handlers are
-// exercised end-to-end. Tests are serial: the HCM store is a shared in-memory
-// singleton and each spec resets it via POST /api/hcm/reset.
+// E2E runs against the PRODUCTION server (next start): dev-mode on-demand
+// route compilation can exceed assertion timeouts on cold routes, making
+// specs flaky for infrastructure reasons. Tests are serial: the HCM store is
+// a shared in-memory singleton and each spec resets it via POST /api/hcm/reset.
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
@@ -28,9 +29,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm dev --port ${PORT}`,
+    // CI builds in a prior step; locally the suite is self-contained.
+    command: process.env.CI
+      ? `pnpm exec next start -p ${PORT}`
+      : `pnpm build && pnpm exec next start -p ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 180_000,
   },
 });
