@@ -22,6 +22,7 @@ import {
   type SubmitDeps,
 } from "./submitFlow";
 import { decideOnRequest, type DecideOutcome } from "./decideFlow";
+import { syncDecisions } from "./syncDecisions";
 
 /**
  * React bindings for the data layer. Deliberately thin: every decision worth
@@ -201,6 +202,43 @@ export function useDecideRequest(): {
       decideOnRequest(variables, { queryClient, notify }),
   });
   return { decide: mutation.mutateAsync, isDeciding: mutation.isPending };
+}
+
+const DECISION_SYNC_POLL_MS = 5_000;
+
+/**
+ * Employee side of the manager loop: polls request records and folds
+ * decisions into the session ledger via the FSM's MANAGER_* events.
+ */
+export function useDecisionSync(): void {
+  const queryClient = useQueryClient();
+  const notify = useNotificationsStore((s) => s.push);
+  const query = useQuery({
+    queryKey: queryKeys.requestsRoot,
+    queryFn: async () => {
+      const result = await hcmApi.listRequests();
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
+      return result.value;
+    },
+    refetchInterval: DECISION_SYNC_POLL_MS,
+  });
+
+  const records = query.data;
+  useEffect(() => {
+    if (!records) {
+      return;
+    }
+    const decided = syncDecisions(appLedger, records, notify);
+    // A denial refunded its hold at HCM — re-read those cells now instead
+    // of leaving a stale number until the next corpus reconciliation.
+    for (const request of decided) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.cell(request.employeeId, request.locationId),
+      });
+    }
+  }, [records, notify, queryClient]);
 }
 
 /** Demo helper: fire the anniversary bonus and let reconciliation surface it. */

@@ -7,6 +7,7 @@ import type { BalanceCell } from "@/domain/types";
 import {
   useBalanceCell,
   useCorpusReconciliation,
+  useDecisionSync,
   useLedgerRequests,
   useRequestRecovery,
   useSubmitRequest,
@@ -60,6 +61,7 @@ function BalanceSection({
  */
 export function EmployeeView(): ReactElement {
   const { hydrated } = useCorpusReconciliation();
+  useDecisionSync();
   const queryClient = useQueryClient();
   const { submit, isSubmitting } = useSubmitRequest();
   const { retry, discard } = useRequestRecovery();
