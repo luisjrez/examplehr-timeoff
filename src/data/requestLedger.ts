@@ -91,13 +91,19 @@ const noopStorage: StateStorage = {
  * holds their days. Rehydrated entries are NOT trusted as-is —
  * `reconcileRehydratedLedger` re-verifies them on boot so a stale overlay
  * can never double-count against the confirmed balance.
+ *
+ * skipHydration: SSR renders an empty ledger; hydrating synchronously from
+ * localStorage on the client would make the first client render differ from
+ * the server HTML (React hydration mismatch). useLedgerRehydration calls
+ * `appLedger.persist.rehydrate()` after mount instead.
  */
-export const appLedger: LedgerStore = createStore<LedgerState>()(
+export const appLedger = createStore<LedgerState>()(
   persist(ledgerState, {
     name: "examplehr-timeoff-ledger",
     storage: createJSONStorage(() =>
       typeof window === "undefined" ? noopStorage : window.localStorage,
     ),
     partialize: (state) => ({ requests: state.requests }),
+    skipHydration: true,
   }),
 );

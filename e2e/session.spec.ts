@@ -14,6 +14,18 @@ test.beforeEach(async ({ request }) => {
 test("a filed request survives a reload — visible, correct phase, no double-count", async ({
   page,
 }) => {
+  // Guard against SSR/client divergence: a persisted ledger hydrating
+  // synchronously caused a real React hydration mismatch (#418/#423).
+  const hydrationErrors: string[] = [];
+  page.on("console", (message) => {
+    if (
+      message.type() === "error" &&
+      /hydrat|minified react error #4(18|23|25)/i.test(message.text())
+    ) {
+      hydrationErrors.push(message.text());
+    }
+  });
+
   await page.goto("/employee");
   await expect(page.getByText("12", { exact: true })).toBeVisible();
 
@@ -34,6 +46,7 @@ test("a filed request survives a reload — visible, correct phase, no double-co
   // …and the projection shows HCM truth (10), NOT 10 − 2 re-subtracted.
   await expect(page.getByText("10", { exact: true })).toBeVisible();
   await expect(page.getByText("8", { exact: true })).not.toBeVisible();
+  expect(hydrationErrors).toEqual([]);
 });
 
 test("a decision made while the employee was away lands on the rehydrated request", async ({
