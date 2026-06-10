@@ -94,6 +94,24 @@ export type RequestEvent =
   | { readonly type: "RETRY" }
   | { readonly type: "DISCARD" };
 
+/** Server-side lifecycle of a request as HCM records it. */
+export type HcmRequestStatus = "pending" | "approved" | "denied";
+
+/**
+ * A time-off request as HCM records it (the wire shape both the mock and the
+ * data layer speak). Distinct from `TimeOffRequest`, which carries the
+ * client-side filing FSM on top.
+ */
+export interface HcmRequestRecord {
+  readonly id: string;
+  readonly employeeId: string;
+  readonly locationId: string;
+  readonly days: number;
+  readonly status: HcmRequestStatus;
+  readonly filedAt: string;
+  readonly decidedAt?: string;
+}
+
 /**
  * Freshness of a confirmed value, derived from its age (TRD §6.5).
  * The UI surfaces this instead of blocking when HCM is slow or silent.

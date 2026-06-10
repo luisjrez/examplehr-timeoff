@@ -1,4 +1,12 @@
-import { cellKeyOf, type BalanceCell, type CellKey } from "@/domain/types";
+import {
+  cellKeyOf,
+  type BalanceCell,
+  type CellKey,
+  type HcmRequestRecord,
+  type HcmRequestStatus,
+} from "@/domain/types";
+
+export type { HcmRequestRecord, HcmRequestStatus };
 
 /**
  * The brain of the mock HCM (TRD §9). Pure TypeScript, framework-free, so the
@@ -22,19 +30,6 @@ export type HcmErrorCode =
 export type HcmResult<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: HcmErrorCode };
-
-export type HcmRequestStatus = "pending" | "approved" | "denied";
-
-/** A time-off request as HCM records it (server-side view, no client FSM). */
-export interface HcmRequestRecord {
-  readonly id: string;
-  readonly employeeId: string;
-  readonly locationId: string;
-  readonly days: number;
-  readonly status: HcmRequestStatus;
-  readonly filedAt: string;
-  readonly decidedAt?: string;
-}
 
 export interface FileRequestInput {
   readonly employeeId: string;
