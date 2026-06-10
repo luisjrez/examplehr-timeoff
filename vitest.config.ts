@@ -37,6 +37,8 @@ export default defineConfig({
         test: {
           name: "unit",
           environment: "jsdom",
+          // globals enables Testing Library's automatic DOM cleanup between tests.
+          globals: true,
           setupFiles: ["./vitest.setup.ts"],
           include: ["src/**/*.test.{ts,tsx}"],
         },

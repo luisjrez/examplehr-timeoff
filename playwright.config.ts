@@ -4,7 +4,7 @@ const PORT = 3100;
 
 // E2E runs against a real `next dev` server so the mock HCM route handlers are
 // exercised end-to-end. Tests are serial: the HCM store is a shared in-memory
-// singleton and each spec resets it via POST /api/hcm/__reset.
+// singleton and each spec resets it via POST /api/hcm/reset.
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,

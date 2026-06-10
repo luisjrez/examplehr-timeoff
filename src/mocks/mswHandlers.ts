@@ -120,7 +120,7 @@ export function buildHcmHandlers(store: HcmStore): ReturnType<typeof http.get>[]
       return HttpResponse.json({ affected: store.triggerAnniversary(employeeId) });
     }),
 
-    http.post("/api/hcm/__reset", () => {
+    http.post("/api/hcm/reset", () => {
       store.reset();
       return HttpResponse.json({ ok: true });
     }),

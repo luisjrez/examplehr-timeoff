@@ -173,7 +173,7 @@ The mock's brain is a **pure module** (`src/mocks/hcm-store.ts`, framework-free)
 | `GET /api/hcm/corpus` | Full corpus, artificial latency (it is "expensive") |
 | `POST /api/hcm/requests`, `PATCH /api/hcm/requests/[id]` | Request lifecycle; approve debits via CAS |
 | `POST /api/hcm/triggers/anniversary` | Fires the bonus deterministically (tests/stories); a timer drives it in demo mode (`HCM_DEMO_CHAOS=1`) |
-| `POST /api/hcm/__reset` | Re-seed; test isolation |
+| `POST /api/hcm/reset` | Re-seed; test isolation |
 
 **Determinism by injection:** chaos is requested per call via the `x-chaos` header — `silent-failure` (200, no effect), `wrong-success` (200, wrong effect), `conflict`, `latency:<ms>`, `error`. Tests inject exactly the failure under test; demo mode rolls probabilities. This is the difference between "we have chaos" and "we can *prove* behavior under chaos."
 
