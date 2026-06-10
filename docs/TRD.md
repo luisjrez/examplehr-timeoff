@@ -211,3 +211,28 @@ Rationale: the FSM/property tests are the deepest guard (they outlive UI rewrite
 ## 12. Out of Scope
 
 Authentication/authorization, multi-tenant concerns, real HCM connectors, i18n, and persistence beyond the in-memory mock. The employee/manager switch is a UI toggle, not a security boundary.
+
+## 13. Security Considerations
+
+This is a take-home demo, but the security posture is deliberate: what is enforced today, what is consciously out of scope, and what the production path looks like.
+
+### 13.1 Enforced today
+
+- **No trust in the network shape.** Every payload — in both directions — crosses a validation boundary: route handlers parse request bodies from `unknown` (`src/mocks/wire.ts`), and the client parses every HCM response from `unknown` (`src/data/parsers.ts`). A malformed or hostile payload becomes a typed failure, never a rendered lie. The same applies to SSE events (`reconcileRealtimeEvent` drops anything unparseable).
+- **TOCTOU resistance by design.** Every write is compare-and-swap on a per-cell version. A decision or filing based on stale data is structurally rejected (409) — the time-of-check/time-of-use gap cannot silently corrupt balances, even with concurrent actors (proven e2e).
+- **No injection surface.** React escapes all rendered content; there is no `dangerouslySetInnerHTML`, no `eval`, no string-built queries. Strict TypeScript (`no-explicit-any`, `no-unsafe-*` as errors) closes the type-level holes that usually hide unsafe data flow.
+- **Writes are never auto-retried.** Beyond UX, this is an integrity property: a blind retry after an ambiguous failure could double-book time off. Recovery always passes through verification plus an explicit user decision.
+- **Supply chain hygiene.** Locked dependency graph (`pnpm-lock.yaml`, `--frozen-lockfile` in CI), pinned `packageManager`, CI gate on every push; deploy credentials live only in GitHub secrets — never in the repo.
+
+### 13.2 Deliberately out of scope (and documented)
+
+- **Authentication/authorization.** The employee/manager switch is a navigation concern, NOT a security boundary (§12). There is no session, so there is no point pretending route handlers are protected.
+- **Test/demo surfaces are open.** `x-chaos`, `POST /api/hcm/reset` and the anniversary trigger exist so evaluators and tests can exercise the failure matrix. In any real deployment these are the first things to remove.
+
+### 13.3 Production path
+
+1. **AuthN/AuthZ**: OIDC session; employees may file only for themselves; managers may decide only for their reports; route handlers enforce this server-side (the UI persona toggle disappears).
+2. **Scope the SSE feed**: today `/api/hcm/events` broadcasts all cells to any listener; production filters events per authenticated user's visibility.
+3. **Gate the test surfaces**: chaos header, reset and triggers disabled outside non-production environments (env-gated), or moved behind an admin-only API.
+4. **Idempotency keys** on filings, so a client retry after a network ambiguity cannot double-file.
+5. **Transport hardening**: rate limiting on write endpoints, CSP headers, CORS pinned to the app origin — none of which changes the architecture above.

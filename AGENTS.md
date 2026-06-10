@@ -20,6 +20,7 @@ balances mutate underneath open sessions, a `200 OK` can be a lie, and an
 employee must never be told "approved" before it is true.
 
 - **Spec / source of truth:** `docs/TRD.md` — read it before changing behavior.
+  Security posture: TRD §13. Roadmap: `docs/FUTURE.md`.
 - **Live demo:** https://examplehr-timeoff-five.vercel.app
 - **Storybook:** https://main--6a299211ce79a0f82652a294.chromatic.com
 - **Repo:** https://github.com/luisjrez/examplehr-timeoff
@@ -228,6 +229,16 @@ route them through `mutateCell` / emit a request event so live clients see
 them. Note for e2e: live sync collapses UI race windows — specs that want a
 stale-version 409 must force it at the HTTP level (see the version-gated
 spec), not by clicking a stale button that SSE already refreshed.
+
+## Spec-driven development (stateful plans)
+
+Non-trivial work is planned in `docs/plans/plan-NNNN-*.json` (schema in
+`docs/plans/schema.json`, workflow in `docs/plans/README.md`). The plan file
+IS the state: multi-phase, each phase declares `dependsOn` + `parallelizable`,
+and agents write `status`/`updatedAt` back after every task — any session can
+resume where the last one stopped. A phase only completes when its tasks'
+`verification` passes plus the repo gate. Before inventing a new plan, check
+whether `plan-0001` (production-readiness roadmap) already covers the work.
 
 ## Repo-specific gotchas
 

@@ -11,7 +11,10 @@ without ever telling an employee "approved" before it is true.
 
 📄 **Start with the [Technical Requirement Document](docs/TRD.md)** — it
 enumerates the challenges, the architecture (optimistic-with-provenance,
-request FSM, CAS-gated decisions) and the alternatives considered.
+request FSM, CAS-gated decisions), the alternatives considered and the
+security posture (§13). Where this goes next: [docs/FUTURE.md](docs/FUTURE.md),
+executable as a stateful multi-phase plan in
+[docs/plans/](docs/plans/README.md).
 
 > Built 100% through agentic development: the spec, the TRD and the test
 > design drive the agent; no line of code was written by hand.
@@ -61,9 +64,10 @@ Route handlers under `/api/hcm/*` and MSW handlers share one in-memory brain
 `wrong-success`, `conflict`, `error`, `latency:<ms>`). Demo mode
 (`HCM_DEMO_CHAOS=1`) rolls dice instead; explicit headers always win.
 
-It also pushes **real-time updates**: `GET /api/hcm/events` streams confirmed
-cell changes over SSE; the employee view subscribes and reconciles instantly
-(the "● Live" badge), with the corpus poll as the fallback (TRD §6.6).
+It also pushes **real-time updates**: `GET /api/hcm/events` streams cell AND
+request changes over SSE; both views subscribe (the "● Live" badge) — open
+`/employee` and `/manager` side by side and watch filings and decisions sync
+across users instantly, with the polls as fallback (TRD §6.6).
 
 ```bash
 curl -X POST localhost:3000/api/hcm/requests \
