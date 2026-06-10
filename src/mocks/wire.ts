@@ -45,6 +45,7 @@ export function httpStatusOf(error: HcmErrorCode): number {
       return 409;
     case "insufficient_balance":
     case "invalid_dimensions":
+    case "invalid_range":
       return 422;
     case "not_found":
       return 404;
@@ -54,9 +55,12 @@ export function httpStatusOf(error: HcmErrorCode): number {
 export interface FileRequestBody {
   readonly employeeId: string;
   readonly locationId: string;
-  readonly days: number;
+  readonly startDate: string;
+  readonly endDate: string;
   readonly expectedVersion: number;
 }
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export interface DecisionBody {
   readonly decision: "approve" | "deny";
@@ -73,18 +77,20 @@ export function parseFileRequestBody(
   if (!isRecord(body)) {
     return undefined;
   }
-  const { employeeId, locationId, days, expectedVersion } = body;
+  const { employeeId, locationId, startDate, endDate, expectedVersion } = body;
   if (
     typeof employeeId !== "string" ||
     typeof locationId !== "string" ||
-    typeof days !== "number" ||
-    !Number.isInteger(days) ||
+    typeof startDate !== "string" ||
+    !ISO_DATE.test(startDate) ||
+    typeof endDate !== "string" ||
+    !ISO_DATE.test(endDate) ||
     typeof expectedVersion !== "number" ||
     !Number.isInteger(expectedVersion)
   ) {
     return undefined;
   }
-  return { employeeId, locationId, days, expectedVersion };
+  return { employeeId, locationId, startDate, endDate, expectedVersion };
 }
 
 export function parseDecisionBody(body: unknown): DecisionBody | undefined {

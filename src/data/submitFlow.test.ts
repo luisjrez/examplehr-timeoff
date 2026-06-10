@@ -90,7 +90,12 @@ describe("submitTimeOffRequest — happy path", () => {
     const h = createHarness();
 
     await submitTimeOffRequest(
-      { employeeId: EMP, locationId: LOC, days: 2 },
+      {
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-15",
+        endDate: "2026-06-16",
+      },
       h.deps,
     );
 
@@ -111,7 +116,13 @@ describe("submitTimeOffRequest — HCM lies (chaos)", () => {
     const h = createHarness();
 
     await submitTimeOffRequest(
-      { employeeId: EMP, locationId: LOC, days: 2, chaos: "silent-failure" },
+      {
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-15",
+        endDate: "2026-06-16",
+        chaos: "silent-failure",
+      },
       h.deps,
     );
 
@@ -131,7 +142,13 @@ describe("submitTimeOffRequest — HCM lies (chaos)", () => {
     const h = createHarness();
 
     await submitTimeOffRequest(
-      { employeeId: EMP, locationId: LOC, days: 2, chaos: "wrong-success" },
+      {
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-15",
+        endDate: "2026-06-16",
+        chaos: "wrong-success",
+      },
       h.deps,
     );
 
@@ -148,7 +165,12 @@ describe("submitTimeOffRequest — HCM lies (chaos)", () => {
     hcm.triggerAnniversary(EMP);
 
     await submitTimeOffRequest(
-      { employeeId: EMP, locationId: LOC, days: 2 },
+      {
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-15",
+        endDate: "2026-06-16",
+      },
       h.deps,
     );
 
@@ -165,7 +187,13 @@ describe("submitTimeOffRequest — HCM lies (chaos)", () => {
     const h = createHarness();
 
     await submitTimeOffRequest(
-      { employeeId: EMP, locationId: LOC, days: 2, chaos: "error" },
+      {
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-15",
+        endDate: "2026-06-16",
+        chaos: "error",
+      },
       h.deps,
     );
 
@@ -182,7 +210,12 @@ describe("submitTimeOffRequest — clean rejections", () => {
     const h = createHarness();
 
     await submitTimeOffRequest(
-      { employeeId: EMP, locationId: LOC, days: 13 },
+      {
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-15",
+        endDate: "2026-07-03", // 15 business days > the 12 seeded
+      },
       h.deps,
     );
 
@@ -200,7 +233,12 @@ describe("recovery actions", () => {
     hcm.triggerAnniversary(EMP); // forces version_conflict on first try
 
     await submitTimeOffRequest(
-      { employeeId: EMP, locationId: LOC, days: 2 },
+      {
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-15",
+        endDate: "2026-06-16",
+      },
       h.deps,
     );
     const clientId = Object.keys(h.ledger.getState().requests)[0] ?? "";
@@ -220,7 +258,13 @@ describe("recovery actions", () => {
     const h = createHarness();
 
     await submitTimeOffRequest(
-      { employeeId: EMP, locationId: LOC, days: 2, chaos: "silent-failure" },
+      {
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-15",
+        endDate: "2026-06-16",
+        chaos: "silent-failure",
+      },
       h.deps,
     );
     const clientId = Object.keys(h.ledger.getState().requests)[0] ?? "";
@@ -240,7 +284,13 @@ describe("background reconciliation vs in-flight action (TRD §6.3)", () => {
 
     // Slow down the write so the corpus lands while the request is in flight.
     const submission = submitTimeOffRequest(
-      { employeeId: EMP, locationId: LOC, days: 2, chaos: "latency:300" },
+      {
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-15",
+        endDate: "2026-06-16",
+        chaos: "latency:300",
+      },
       h.deps,
     );
 

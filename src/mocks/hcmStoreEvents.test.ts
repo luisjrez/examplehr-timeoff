@@ -29,7 +29,8 @@ describe("hcmStore — change events (realtime feed)", () => {
     store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: version,
     });
 
@@ -50,7 +51,8 @@ describe("hcmStore — change events (realtime feed)", () => {
     const filed = store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: version,
     });
     if (!filed.ok) {
@@ -84,13 +86,15 @@ describe("hcmStore — change events (realtime feed)", () => {
     store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: 999, // stale → version_conflict
     });
     store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 99, // insufficient
+      startDate: "2026-06-15",
+      endDate: "2026-07-03", // 15 business days — insufficient
       expectedVersion: store.getCell(EMP, LOC)?.version ?? -1,
     });
 
@@ -103,7 +107,8 @@ describe("hcmStore — change events (realtime feed)", () => {
     store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: version,
       chaos: "silent-failure",
     });
@@ -112,7 +117,8 @@ describe("hcmStore — change events (realtime feed)", () => {
     store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: version,
       chaos: "wrong-success",
     });

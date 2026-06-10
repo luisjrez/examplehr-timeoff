@@ -1,3 +1,4 @@
+import { businessDaysBetween } from "@/domain/dateRange";
 import {
   cellKeyOf,
   type BalanceCell,
@@ -24,6 +25,7 @@ export type HcmErrorCode =
   | "version_conflict"
   | "insufficient_balance"
   | "invalid_dimensions"
+  | "invalid_range"
   | "not_found"
   | "not_pending";
 
@@ -34,7 +36,9 @@ export type HcmResult<T> =
 export interface FileRequestInput {
   readonly employeeId: string;
   readonly locationId: string;
-  readonly days: number;
+  /** Inclusive ISO range; HCM derives the business-day count itself. */
+  readonly startDate: string;
+  readonly endDate: string;
   /** CAS guard: the cell version the client believes is current. */
   readonly expectedVersion: number;
   readonly chaos?: ChaosMode;
@@ -141,13 +145,18 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
     return next;
   }
 
-  function buildRequest(input: FileRequestInput): HcmRequestRecord {
+  function buildRequest(
+    input: FileRequestInput,
+    days: number,
+  ): HcmRequestRecord {
     requestSequence += 1;
     return {
       id: `req-${String(requestSequence).padStart(4, "0")}`,
       employeeId: input.employeeId,
       locationId: input.locationId,
-      days: input.days,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      days,
       status: "pending",
       filedAt: now().toISOString(),
     };
@@ -182,11 +191,17 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
       ) {
         return { ok: false, error: "version_conflict" };
       }
-      if (input.days <= 0 || cell.days < input.days) {
+      // HCM derives the hold size itself: a client cannot file a hold that
+      // disagrees with its own range (TRD §13 — no trust in the wire shape).
+      const days = businessDaysBetween(input.startDate, input.endDate);
+      if (days === 0) {
+        return { ok: false, error: "invalid_range" };
+      }
+      if (cell.days < days) {
         return { ok: false, error: "insufficient_balance" };
       }
 
-      const record = buildRequest(input);
+      const record = buildRequest(input, days);
 
       // silent-failure: the response will say "created" but HCM kept nothing.
       if (input.chaos === "silent-failure") {
@@ -202,7 +217,7 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
 
       requests.set(record.id, record);
       emit({ type: "request", request: record });
-      mutateCell(cell, -input.days);
+      mutateCell(cell, -days);
       return { ok: true, value: record };
     },
 

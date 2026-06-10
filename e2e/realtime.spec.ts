@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { START, endFor } from "./dates";
+
 /**
  * Real-time reconciliation (TRD §6.6): HCM is not the only thing that
  * mutates balances. These specs mutate HCM from OUTSIDE the browser session
@@ -52,7 +54,8 @@ test("a filing from another session appears in the open manager queue live", asy
     data: {
       employeeId: "emp-alice",
       locationId: "loc-mx",
-      days: 2,
+      startDate: START,
+      endDate: endFor(2),
       expectedVersion: cell.version,
     },
   });
@@ -73,7 +76,8 @@ test("a manager decision elsewhere updates the employee's balance live", async (
   await expect(employeePage.getByText("12", { exact: true })).toBeVisible();
 
   // Employee files; the hold is verified.
-  await employeePage.getByLabel("Days").fill("3");
+  await employeePage.getByLabel("Start date").fill(START);
+  await employeePage.getByLabel("End date").fill(endFor(3));
   await employeePage.getByRole("button", { name: "Request time off" }).click();
   await expect(
     employeePage.getByText("Awaiting manager approval", { exact: true }),

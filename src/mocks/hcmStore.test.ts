@@ -47,7 +47,8 @@ describe("hcmStore — filing a request (hold semantics + CAS)", () => {
     const result = store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: before?.version ?? -1,
     });
 
@@ -64,7 +65,8 @@ describe("hcmStore — filing a request (hold semantics + CAS)", () => {
     const result = store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: 999,
     });
     expect(result).toEqual({ ok: false, error: "version_conflict" });
@@ -76,18 +78,43 @@ describe("hcmStore — filing a request (hold semantics + CAS)", () => {
     const result = store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 13,
+      startDate: "2026-06-15",
+      endDate: "2026-07-03", // 15 business days > the 12 seeded
       expectedVersion: version,
     });
     expect(result).toEqual({ ok: false, error: "insufficient_balance" });
     expect(store.getCell(EMP, LOC)?.version).toBe(version);
   });
 
+  it("rejects ranges with no business days (weekend-only or inverted)", () => {
+    const version = store.getCell(EMP, LOC)?.version ?? -1;
+    expect(
+      store.fileRequest({
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-13", // Sat
+        endDate: "2026-06-14", // Sun
+        expectedVersion: version,
+      }),
+    ).toEqual({ ok: false, error: "invalid_range" });
+    expect(
+      store.fileRequest({
+        employeeId: EMP,
+        locationId: LOC,
+        startDate: "2026-06-16",
+        endDate: "2026-06-15", // inverted
+        expectedVersion: version,
+      }),
+    ).toEqual({ ok: false, error: "invalid_range" });
+    expect(store.getCell(EMP, LOC)?.days).toBe(12);
+  });
+
   it("rejects invalid dimension combinations", () => {
     const result = store.fileRequest({
       employeeId: EMP,
       locationId: "loc-ghost",
-      days: 1,
+      startDate: "2026-06-15",
+      endDate: "2026-06-15",
       expectedVersion: 1,
     });
     expect(result).toEqual({ ok: false, error: "invalid_dimensions" });
@@ -105,7 +132,8 @@ describe("hcmStore — chaos modes (deterministic injection)", () => {
     const result = store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: version,
       chaos: "silent-failure",
     });
@@ -124,7 +152,8 @@ describe("hcmStore — chaos modes (deterministic injection)", () => {
     const result = store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: version,
       chaos: "wrong-success",
     });
@@ -141,7 +170,8 @@ describe("hcmStore — chaos modes (deterministic injection)", () => {
     const result = store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: version,
       chaos: "conflict",
     });
@@ -159,7 +189,8 @@ describe("hcmStore — manager decisions", () => {
     const filed = store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 3,
+      startDate: "2026-06-15",
+      endDate: "2026-06-17",
       expectedVersion: version,
     });
     if (!filed.ok) {
@@ -232,7 +263,8 @@ describe("hcmStore — the world changes underneath (anniversary bonus)", () => 
     const result = store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 1,
+      startDate: "2026-06-15",
+      endDate: "2026-06-15",
       expectedVersion: staleVersion,
     });
     expect(result).toEqual({ ok: false, error: "version_conflict" });
@@ -246,7 +278,8 @@ describe("hcmStore — reset", () => {
     store.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 5,
+      startDate: "2026-06-15",
+      endDate: "2026-06-19",
       expectedVersion: version,
     });
 

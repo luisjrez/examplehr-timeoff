@@ -81,6 +81,10 @@ const eslintConfig = defineConfig([
     ],
     rules: {
       "@typescript-eslint/no-non-null-assertion": "off",
+      // Storybook's instrumented test utils degrade to any at the boundary.
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
       "react/jsx-no-bind": "off",
     },
   },

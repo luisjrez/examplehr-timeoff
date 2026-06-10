@@ -22,6 +22,7 @@ export type ApiError =
   | "version_conflict"
   | "insufficient_balance"
   | "invalid_dimensions"
+  | "invalid_range"
   | "not_found"
   | "not_pending"
   | "hcm_unavailable"
@@ -46,7 +47,8 @@ export type ChaosInjection =
 export interface FileRequestPayload {
   readonly employeeId: string;
   readonly locationId: string;
-  readonly days: number;
+  readonly startDate: string;
+  readonly endDate: string;
   readonly expectedVersion: number;
 }
 
@@ -54,6 +56,7 @@ const KNOWN_ERRORS: ReadonlySet<string> = new Set([
   "version_conflict",
   "insufficient_balance",
   "invalid_dimensions",
+  "invalid_range",
   "not_found",
   "not_pending",
 ]);

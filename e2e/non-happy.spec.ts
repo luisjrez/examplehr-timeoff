@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { START, endFor } from "./dates";
+
 /**
  * Non-happy paths called out by the assignment: clear rejections, successes
  * that lie in different ways, conflicts racing the user, and concurrent
@@ -13,13 +15,14 @@ test.beforeEach(async ({ request }) => {
 
 async function fileRequest(
   page: Page,
-  days: string,
+  businessDays: number,
   chaos?: string,
 ): Promise<void> {
   if (chaos !== undefined) {
     await page.getByLabel("HCM chaos mode").selectOption(chaos);
   }
-  await page.getByLabel("Days").fill(days);
+  await page.getByLabel("Start date").fill(START);
+  await page.getByLabel("End date").fill(endFor(businessDays));
   await page.getByRole("button", { name: "Request time off" }).click();
 }
 
@@ -29,7 +32,7 @@ test("insufficient balance: HCM rejects cleanly and no optimism leaks", async ({
   await page.goto("/employee");
   await expect(page.getByText("12", { exact: true })).toBeVisible();
 
-  await fileRequest(page, "99");
+  await fileRequest(page, 15);
 
   await expect(page.getByText("Denied", { exact: true })).toBeVisible();
   await expect(
@@ -46,7 +49,7 @@ test("wrong-success: the 200 stored the request but never applied the hold — d
   await page.goto("/employee");
   await expect(page.getByText("12", { exact: true })).toBeVisible();
 
-  await fileRequest(page, "2", "wrong-success");
+  await fileRequest(page, 2, "wrong-success");
 
   // Verification catches the half-applied write.
   await expect(
@@ -70,7 +73,7 @@ test("forced version conflict at filing: recovery retries against fresh truth", 
   await page.goto("/employee");
   await expect(page.getByText("12", { exact: true })).toBeVisible();
 
-  await fileRequest(page, "2", "conflict");
+  await fileRequest(page, 2, "conflict");
 
   await expect(
     page.getByText("HCM did not apply this request", { exact: true }),
@@ -95,7 +98,7 @@ test("hard 500: kept as a recoverable contradiction, never lost or auto-retried"
   await page.goto("/employee");
   await expect(page.getByText("12", { exact: true })).toBeVisible();
 
-  await fileRequest(page, "2", "error");
+  await fileRequest(page, 2, "error");
 
   await expect(
     page.getByText("HCM did not apply this request", { exact: true }),
@@ -122,7 +125,7 @@ test("per-location isolation: a filing against Austin never touches Mexico City"
   await expect(page.getByText("5", { exact: true })).toBeVisible();
 
   await page.getByLabel("Location").selectOption("loc-us");
-  await fileRequest(page, "2");
+  await fileRequest(page, 2);
 
   await expect(
     page.getByText("Awaiting manager approval", { exact: true }),
@@ -143,7 +146,8 @@ test("two managers race: the second decision on a settled request fails safely",
     data: {
       employeeId: "emp-alice",
       locationId: "loc-mx",
-      days: 2,
+      startDate: START,
+      endDate: endFor(2),
       expectedVersion: cell.version,
     },
   });

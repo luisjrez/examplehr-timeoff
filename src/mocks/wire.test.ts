@@ -46,25 +46,28 @@ describe("wire — body validation (unknown in, typed out)", () => {
       parseFileRequestBody({
         employeeId: "emp-alice",
         locationId: "loc-mx",
-        days: 2,
+        startDate: "2026-06-15",
+        endDate: "2026-06-16",
         expectedVersion: 1,
       }),
     ).toEqual({
       employeeId: "emp-alice",
       locationId: "loc-mx",
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: 1,
     });
   });
 
-  it("rejects missing fields, wrong types and non-integer days", () => {
+  it("rejects missing fields, wrong types and malformed dates", () => {
     expect(parseFileRequestBody(null)).toBeUndefined();
     expect(parseFileRequestBody({ employeeId: "e" })).toBeUndefined();
     expect(
       parseFileRequestBody({
         employeeId: "e",
         locationId: "l",
-        days: "2",
+        startDate: "June 15",
+        endDate: "2026-06-16",
         expectedVersion: 1,
       }),
     ).toBeUndefined();
@@ -72,7 +75,8 @@ describe("wire — body validation (unknown in, typed out)", () => {
       parseFileRequestBody({
         employeeId: "e",
         locationId: "l",
-        days: 1.5,
+        startDate: "2026-06-15",
+        endDate: 20260616,
         expectedVersion: 1,
       }),
     ).toBeUndefined();

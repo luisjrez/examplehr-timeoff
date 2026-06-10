@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { formatRange } from "@/domain/dateRange";
 import type { BalanceCellView, HcmRequestRecord } from "@/domain/types";
 
 import { ProvenanceBadge } from "../ProvenanceBadge";
@@ -43,6 +44,9 @@ export function DecisionPanel({
           {request.locationId}
         </p>
       </div>
+      <p className="text-xs text-gray-500 dark:text-zinc-400">
+        For {formatRange(request)}
+      </p>
 
       <div className="flex items-center gap-2 rounded-md bg-gray-50 dark:bg-zinc-800/70 p-2 text-sm">
         {isCellLoading || !cellView.confirmed ? (

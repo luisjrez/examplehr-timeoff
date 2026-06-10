@@ -25,6 +25,10 @@ function request(days: number, phase: RequestPhase): TimeOffRequest {
     id: `req-${days}-${phase.status}`,
     employeeId: "emp-1",
     locationId: "loc-mx",
+    // The projection sums the derived `days` field; the literal range is
+    // irrelevant to these tests, so a fixed one keeps fixtures simple.
+    startDate: "2026-06-15",
+    endDate: "2026-06-19",
     days,
     phase,
     createdAt: NOW.toISOString(),

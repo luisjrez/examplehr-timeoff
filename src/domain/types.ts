@@ -69,7 +69,11 @@ export interface TimeOffRequest {
   readonly id: string;
   readonly employeeId: string;
   readonly locationId: string;
-  /** Whole days requested; always positive. */
+  /** First day off (ISO yyyy-mm-dd, inclusive). */
+  readonly startDate: string;
+  /** Last day off (ISO yyyy-mm-dd, inclusive). */
+  readonly endDate: string;
+  /** DERIVED business-day count of the range; the hold size. */
   readonly days: number;
   readonly phase: RequestPhase;
   readonly createdAt: string;
@@ -106,6 +110,11 @@ export interface HcmRequestRecord {
   readonly id: string;
   readonly employeeId: string;
   readonly locationId: string;
+  /** First day off (ISO yyyy-mm-dd, inclusive). */
+  readonly startDate: string;
+  /** Last day off (ISO yyyy-mm-dd, inclusive). */
+  readonly endDate: string;
+  /** DERIVED business-day count — HCM computes it from the range. */
   readonly days: number;
   readonly status: HcmRequestStatus;
   readonly filedAt: string;

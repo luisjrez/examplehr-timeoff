@@ -69,6 +69,8 @@ BalanceCellView    = {
 }
 ```
 
+Requests carry an inclusive **date range** (`startDate`/`endDate`, ISO, UTC-anchored); `days` is the DERIVED business-day count (`src/domain/dateRange.ts`) and is re-derived server-side — a client cannot file a hold that disagrees with its own range (`invalid_range`, 422). The form narrates the derived hold ("3 business days · Jun 15 – Jun 17") before submitting.
+
 All domain code lives in `src/domain/` with **zero React imports** — pure functions over immutable data, so the invariants are testable with property-based tests (fast-check):
 
 - `projected === (confirmed?.days ?? 0) + Σ pending.deltaDays` — for **any** sequence of events.

@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 
+import { businessDaysBetween } from "@/domain/dateRange";
 import type { BalanceCell, RejectionReason } from "@/domain/types";
 
 import { mergeCell } from "./applyCorpus";
@@ -26,7 +27,9 @@ export interface SubmitDeps {
 export interface SubmitInput {
   readonly employeeId: string;
   readonly locationId: string;
-  readonly days: number;
+  /** Inclusive ISO range; the hold size is derived business days. */
+  readonly startDate: string;
+  readonly endDate: string;
   readonly chaos?: ChaosInjection;
 }
 
@@ -39,7 +42,10 @@ export async function submitTimeOffRequest(
     id: clientId,
     employeeId: input.employeeId,
     locationId: input.locationId,
-    days: input.days,
+    startDate: input.startDate,
+    endDate: input.endDate,
+    // Same derivation HCM applies server-side — the optimistic hold matches.
+    days: businessDaysBetween(input.startDate, input.endDate),
     phase: { status: "draft" },
     createdAt: new Date().toISOString(),
   });
@@ -63,7 +69,8 @@ export async function retryRequest(
     {
       employeeId: record.employeeId,
       locationId: record.locationId,
-      days: record.days,
+      startDate: record.startDate,
+      endDate: record.endDate,
     },
     deps,
   );
@@ -103,7 +110,8 @@ async function fileAndVerify(
     {
       employeeId: input.employeeId,
       locationId: input.locationId,
-      days: input.days,
+      startDate: input.startDate,
+      endDate: input.endDate,
       expectedVersion,
     },
     input.chaos,
@@ -140,7 +148,7 @@ async function fileAndVerify(
     dispatch(clientId, { type: "VERIFY_MATCH" });
     notify({
       kind: "request_confirmed",
-      message: `Request for ${input.days} day(s) filed — awaiting manager approval.`,
+      message: `Request for ${filed.value.days} day(s) filed — awaiting manager approval.`,
     });
     await queryClient.invalidateQueries({ queryKey: queryKeys.requestsRoot });
   } else {
@@ -175,15 +183,19 @@ async function handleFilingError(
       return;
     }
     case "insufficient_balance":
-    case "invalid_dimensions": {
-      const reason: RejectionReason = error;
+    case "invalid_dimensions":
+    case "invalid_range": {
+      const reason: RejectionReason =
+        error === "invalid_range" ? "invalid_dimensions" : error;
       dispatch(clientId, { type: "HCM_REJECTED", reason });
       deps.notify({
         kind: "request_denied",
         message:
           error === "insufficient_balance"
             ? "HCM rejected the request: not enough days available."
-            : "HCM rejected the request: invalid employee/location combination.",
+            : error === "invalid_range"
+              ? "HCM rejected the request: the selected dates are not a valid range."
+              : "HCM rejected the request: invalid employee/location combination.",
       });
       return;
     }

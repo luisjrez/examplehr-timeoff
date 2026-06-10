@@ -117,7 +117,8 @@ export function EmployeeView(): ReactElement {
       submit({
         employeeId: CURRENT_EMPLOYEE,
         locationId: values.locationId,
-        days: values.days,
+        startDate: values.startDate,
+        endDate: values.endDate,
         ...(chaos === "" ? {} : { chaos }),
       });
     },

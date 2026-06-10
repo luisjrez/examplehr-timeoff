@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+
+import { addBusinessDays, nextBusinessDay } from "@/domain/dateRange";
 
 import { createHcmStore } from "@/mocks/hcmStore";
 import { buildHcmHandlers } from "@/mocks/mswHandlers";
@@ -14,6 +16,23 @@ import { EmployeeView } from "./EmployeeView";
  * are the states the assignment demands, exercised end-to-end in the browser.
  */
 const hcm = createHcmStore();
+
+// The form forbids past dates, so ranges anchor to the real clock (frozen
+// under Chromatic) via the same pure domain helpers the form uses.
+const START = nextBusinessDay(new Date().toISOString().slice(0, 10));
+
+async function pickRange(
+  canvas: ReturnType<typeof within>,
+  businessDays: number,
+): Promise<void> {
+  const end = addBusinessDays(START, businessDays - 1);
+  await fireEvent.change(canvas.getByLabelText(/start date/i), {
+    target: { value: START },
+  });
+  await fireEvent.change(canvas.getByLabelText(/end date/i), {
+    target: { value: end },
+  });
+}
 
 const meta = {
   title: "Flows/EmployeeView",
@@ -111,8 +130,7 @@ export const OptimisticPendingThenConfirmed: Story = {
       canvas.getByLabelText(/hcm chaos mode/i),
       "latency:2000",
     );
-    await userEvent.clear(canvas.getByLabelText(/days/i));
-    await userEvent.type(canvas.getByLabelText(/days/i), "2");
+    await pickRange(canvas, 2);
     await userEvent.click(
       canvas.getByRole("button", { name: /request time off/i }),
     );
@@ -155,8 +173,7 @@ export const SilentFailureRollsBack: Story = {
       canvas.getByLabelText(/hcm chaos mode/i),
       "silent-failure",
     );
-    await userEvent.clear(canvas.getByLabelText(/days/i));
-    await userEvent.type(canvas.getByLabelText(/days/i), "2");
+    await pickRange(canvas, 2);
     await userEvent.click(
       canvas.getByRole("button", { name: /request time off/i }),
     );
@@ -185,8 +202,7 @@ export const RejectedInsufficientBalance: Story = {
       await expect(canvas.getByText("12")).toBeInTheDocument();
     });
 
-    await userEvent.clear(canvas.getByLabelText(/days/i));
-    await userEvent.type(canvas.getByLabelText(/days/i), "99");
+    await pickRange(canvas, 15); // 15 business days — more than the 12 available
     await userEvent.click(
       canvas.getByRole("button", { name: /request time off/i }),
     );
@@ -228,5 +244,33 @@ export const BalanceRefreshedMidSession: Story = {
       },
       { timeout: 8000 },
     );
+  },
+};
+
+/**
+ * Invalid range: the form explains the problem and refuses to submit —
+ * the user can never file a range HCM would have to reject on shape.
+ */
+export const InvalidRangeBlocked: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(async () => {
+      await expect(canvas.getByText("12")).toBeInTheDocument();
+    });
+
+    // End before start.
+    await fireEvent.change(canvas.getByLabelText(/start date/i), {
+      target: { value: addBusinessDays(START, 3) },
+    });
+    await fireEvent.change(canvas.getByLabelText(/end date/i), {
+      target: { value: START },
+    });
+
+    await expect(canvas.getByRole("alert")).toHaveTextContent(
+      /end date is before the start date/i,
+    );
+    await expect(
+      canvas.getByRole("button", { name: /request time off/i }),
+    ).toBeDisabled();
   },
 };

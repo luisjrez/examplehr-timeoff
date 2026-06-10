@@ -22,6 +22,8 @@ const REQUEST: HcmRequestRecord = {
   id: "req-0001",
   employeeId: "emp-alice",
   locationId: "loc-mx",
+  startDate: "2026-06-15",
+  endDate: "2026-06-17",
   days: 3,
   status: "pending",
   filedAt: "2026-06-10T11:59:30.000Z",

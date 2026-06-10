@@ -105,5 +105,14 @@ export const appLedger = createStore<LedgerState>()(
     ),
     partialize: (state) => ({ requests: state.requests }),
     skipHydration: true,
+    // v2: requests carry a date range. Pre-range entries cannot be
+    // re-verified into the new shape, so they are dropped on migration.
+    version: 2,
+    migrate: (persisted, version) => {
+      if (version < 2) {
+        return { requests: {} };
+      }
+      return persisted as { requests: Record<string, LedgerRequest> };
+    },
   }),
 );

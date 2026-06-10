@@ -9,7 +9,8 @@ import { useSubmitDeps } from "./useSubmitDeps";
 export interface SubmitRequestVariables {
   readonly employeeId: string;
   readonly locationId: string;
-  readonly days: number;
+  readonly startDate: string;
+  readonly endDate: string;
   readonly chaos?: ChaosInjection;
 }
 

@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { START, endFor } from "./dates";
+
 /**
  * Cross-layer wiring no other test layer can see (TRD §10): real Next.js
  * route handlers, real browser, both personas in separate tabs sharing the
@@ -12,15 +14,16 @@ test.beforeEach(async ({ request }) => {
 });
 
 async function fileRequest(
-  employeePage: Page,
-  days: string,
+  page: Page,
+  businessDays: number,
   chaos?: string,
 ): Promise<void> {
   if (chaos !== undefined) {
-    await employeePage.getByLabel("HCM chaos mode").selectOption(chaos);
+    await page.getByLabel("HCM chaos mode").selectOption(chaos);
   }
-  await employeePage.getByLabel("Days").fill(days);
-  await employeePage.getByRole("button", { name: "Request time off" }).click();
+  await page.getByLabel("Start date").fill(START);
+  await page.getByLabel("End date").fill(endFor(businessDays));
+  await page.getByRole("button", { name: "Request time off" }).click();
 }
 
 test("employee files → manager approves → employee is told, honestly", async ({
@@ -31,7 +34,7 @@ test("employee files → manager approves → employee is told, honestly", async
   await employeePage.goto("/employee");
   await expect(employeePage.getByText("12", { exact: true })).toBeVisible();
 
-  await fileRequest(employeePage, "2");
+  await fileRequest(employeePage, 2);
 
   // Honest lifecycle: hold disclosed, then verified as awaiting approval —
   // never "approved" before the manager speaks.
@@ -68,7 +71,7 @@ test("manager denial refunds the hold and the employee sees both", async ({
   await employeePage.goto("/employee");
   await expect(employeePage.getByText("12", { exact: true })).toBeVisible();
 
-  await fileRequest(employeePage, "3");
+  await fileRequest(employeePage, 3);
   await expect(
     employeePage.getByText("Awaiting manager approval", { exact: true }),
   ).toBeVisible();
@@ -98,7 +101,7 @@ test("silent failure: contradiction surfaces, rolls back, and retry recovers", a
   await page.goto("/employee");
   await expect(page.getByText("12", { exact: true })).toBeVisible();
 
-  await fileRequest(page, "2", "silent-failure");
+  await fileRequest(page, 2, "silent-failure");
 
   // The 200 lied; verification catches it and the projection rolls back.
   await expect(
@@ -138,7 +141,8 @@ test("approval is version-gated: stale writes 409, the live panel re-arms with t
     data: {
       employeeId: "emp-alice",
       locationId: "loc-mx",
-      days: 2,
+      startDate: START,
+      endDate: endFor(2),
       expectedVersion: cell.version,
     },
   });

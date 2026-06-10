@@ -54,6 +54,8 @@ function rehydrated(
     id: "client-1",
     employeeId: EMP,
     locationId: LOC,
+    startDate: "2026-06-15",
+    endDate: "2026-06-16",
     days: 2,
     phase,
     createdAt: "2026-06-10T11:00:00Z",
@@ -72,7 +74,8 @@ describe("reconcileRehydratedLedger", () => {
     const filed = hcm.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: version,
     });
     if (!filed.ok) {
@@ -103,7 +106,8 @@ describe("reconcileRehydratedLedger", () => {
     const filed = hcm.fileRequest({
       employeeId: EMP,
       locationId: LOC,
-      days: 2,
+      startDate: "2026-06-15",
+      endDate: "2026-06-16",
       expectedVersion: version,
     });
     if (!filed.ok) {
@@ -164,6 +168,8 @@ describe("reconcileRehydratedLedger", () => {
       id: "client-a",
       employeeId: EMP,
       locationId: LOC,
+      startDate: "2026-06-15",
+      endDate: "2026-06-15",
       days: 1,
       phase: { status: "pending_approval" },
       createdAt: "2026-06-10T11:00:00Z",
@@ -173,6 +179,8 @@ describe("reconcileRehydratedLedger", () => {
       id: "client-b",
       employeeId: EMP,
       locationId: LOC,
+      startDate: "2026-06-15",
+      endDate: "2026-06-15",
       days: 1,
       phase: { status: "approved" },
       createdAt: "2026-06-10T11:00:00Z",

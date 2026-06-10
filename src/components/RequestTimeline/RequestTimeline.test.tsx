@@ -11,6 +11,8 @@ function request(phase: RequestPhase): TimeOffRequest {
     id: "client-1",
     employeeId: "emp-alice",
     locationId: "loc-mx",
+    startDate: "2026-06-15",
+    endDate: "2026-06-16",
     days: 2,
     phase,
     createdAt: "2026-06-10T12:00:00Z",

@@ -15,12 +15,18 @@ import { ManagerView } from "./ManagerView";
  */
 const hcm = createHcmStore();
 
+const END_BY_DAYS: Readonly<Record<number, string>> = {
+  2: "2026-06-16",
+  3: "2026-06-17",
+};
+
 function seedPendingRequest(days: number): void {
   const version = hcm.getCell("emp-alice", "loc-mx")?.version ?? -1;
   const filed = hcm.fileRequest({
     employeeId: "emp-alice",
     locationId: "loc-mx",
-    days,
+    startDate: "2026-06-15",
+    endDate: END_BY_DAYS[days] ?? "2026-06-16",
     expectedVersion: version,
   });
   if (!filed.ok) {

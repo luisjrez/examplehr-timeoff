@@ -26,6 +26,8 @@ function pendingRequest(days: number): TimeOffRequest {
     id: "req-1",
     employeeId: "emp-alice",
     locationId: "loc-mx",
+    startDate: "2026-06-15",
+    endDate: "2026-06-16",
     days,
     phase: { status: "verifying" },
     createdAt: "2026-06-10T12:00:00Z",

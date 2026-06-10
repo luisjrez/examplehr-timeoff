@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { START, endFor } from "./dates";
+
 /**
  * Session persistence (plan-0001 phase-2): the pending overlay survives
  * reloads, and rehydrated entries re-verify against HCM so the projection
@@ -29,7 +31,8 @@ test("a filed request survives a reload — visible, correct phase, no double-co
   await page.goto("/employee");
   await expect(page.getByText("12", { exact: true })).toBeVisible();
 
-  await page.getByLabel("Days").fill("2");
+  await page.getByLabel("Start date").fill(START);
+  await page.getByLabel("End date").fill(endFor(2));
   await page.getByRole("button", { name: "Request time off" }).click();
   await expect(
     page.getByText("Awaiting manager approval", { exact: true }),
@@ -56,7 +59,8 @@ test("a decision made while the employee was away lands on the rehydrated reques
   await page.goto("/employee");
   await expect(page.getByText("12", { exact: true })).toBeVisible();
 
-  await page.getByLabel("Days").fill("2");
+  await page.getByLabel("Start date").fill(START);
+  await page.getByLabel("End date").fill(endFor(2));
   await page.getByRole("button", { name: "Request time off" }).click();
   await expect(
     page.getByText("Awaiting manager approval", { exact: true }),

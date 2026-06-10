@@ -27,8 +27,9 @@ pnpm dev            # app + mock HCM at http://localhost:3000
 pnpm storybook      # every UI state, at http://localhost:6006
 ```
 
-- `/employee` — balances per location, request filing, recovery from
-  contradictions. The "Simulate" toolbar injects HCM chaos on demand.
+- `/employee` — balances per location, date-range request filing (business
+  days derived and narrated live), recovery from contradictions. The
+  "Simulate" toolbar injects HCM chaos on demand.
 - `/manager` — pending queue with decision-time balance reads and
   version-gated approvals.
 

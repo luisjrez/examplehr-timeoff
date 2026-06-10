@@ -2,6 +2,7 @@
 
 import { useCallback, type ReactElement } from "react";
 
+import { formatRange } from "@/domain/dateRange";
 import type { RequestPhase, TimeOffRequest } from "@/domain/types";
 
 import { Button } from "../ui/Button";
@@ -93,13 +94,15 @@ export function RequestTimeline({
   return (
     <Card as="li" rounded="lg" padding="3" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm">
-          {request.days} day(s) · {locationName}
-        </span>
+        <span className="text-sm font-medium">{formatRange(request)}</span>
         <Chip className={TONE_STYLES[presentation.tone]}>
           {presentation.label}
         </Chip>
       </div>
+      <p className="text-xs text-gray-500 dark:text-zinc-400">
+        {request.days} business day{request.days === 1 ? "" : "s"} ·{" "}
+        {locationName}
+      </p>
       {presentation.detail ? (
         <p className="text-xs text-gray-600 dark:text-zinc-300">
           {presentation.detail}

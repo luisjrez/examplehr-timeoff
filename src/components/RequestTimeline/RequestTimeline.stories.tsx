@@ -33,6 +33,8 @@ function request(phase: RequestPhase): {
   id: string;
   employeeId: string;
   locationId: string;
+  startDate: string;
+  endDate: string;
   days: number;
   phase: RequestPhase;
   createdAt: string;
@@ -41,6 +43,8 @@ function request(phase: RequestPhase): {
     id: "client-1",
     employeeId: "emp-alice",
     locationId: "loc-mx",
+    startDate: "2026-06-15",
+    endDate: "2026-06-16",
     days: 2,
     phase,
     createdAt: "2026-06-10T11:59:30.000Z",

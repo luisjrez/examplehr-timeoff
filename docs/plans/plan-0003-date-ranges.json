@@ -1,0 +1,148 @@
+{
+  "id": "plan-0003",
+  "title": "Date-range time-off requests (UX upgrade)",
+  "spec": "User request 2026-06-10: requests should carry real start/end dates instead of a bare day count. Business-day math in the domain; HCM validates the range server-side; the form becomes a date-range picker with a live computed summary and honest validation states; timeline and decision panel show the range.",
+  "status": "completed",
+  "createdAt": "2026-06-11T00:30:00Z",
+  "updatedAt": "2026-06-11T01:40:00Z",
+  "notes": [
+    "Sequential: every later phase consumes the domain date module and the widened types.",
+    "days stays on the records as the DERIVED business-day count — the projection/hold invariants keep working unchanged; HCM re-derives and rejects mismatches (invalid_range).",
+    "Executed 2026-06-10/11. Design decision during phase-2: the wire payload carries ONLY the range — HCM derives the day count itself, eliminating the days-vs-range mismatch class entirely (stronger than validating a client-sent count). MCP visual pass done on the dev server; the e2e suite (production server) covers the full matrix."
+  ],
+  "phases": [
+    {
+      "id": "phase-1",
+      "title": "Domain: business-day ranges",
+      "goal": "Pure date module (UTC, deterministic): businessDaysBetween, validateRange, formatRange, nextBusinessDay; TimeOffRequest/HcmRequestRecord gain startDate/endDate.",
+      "dependsOn": [],
+      "parallelizable": false,
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "t1",
+          "description": "TDD dateRange.ts incl. property tests (weekends excluded, count non-negative, inclusive bounds).",
+          "status": "completed",
+          "verification": "pnpm test"
+        },
+        {
+          "id": "t2",
+          "description": "Widen TimeOffRequest + HcmRequestRecord with startDate/endDate; ripple fixtures in domain/data tests.",
+          "status": "completed",
+          "verification": "pnpm typecheck && pnpm test"
+        }
+      ],
+      "acceptance": ["Date math is pure, UTC-based and property-tested"],
+      "artifacts": ["src/domain/"]
+    },
+    {
+      "id": "phase-2",
+      "title": "Mock HCM + wire: ranges validated server-side",
+      "goal": "fileRequest accepts startDate/endDate, re-derives the business-day count and rejects mismatches/invalid ranges (new 422 code invalid_range); records carry the range through both transports and the parsers.",
+      "dependsOn": ["phase-1"],
+      "parallelizable": false,
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "t1",
+          "description": "TDD store: valid range files with derived days; end<start, weekend-only, or days mismatch → invalid_range; record carries dates.",
+          "status": "completed",
+          "verification": "pnpm test"
+        },
+        {
+          "id": "t2",
+          "description": "wire.ts body parsing + parsers.ts record parsing include the dates; route handlers and MSW stay in lockstep.",
+          "status": "completed",
+          "verification": "pnpm test"
+        }
+      ],
+      "acceptance": [
+        "A hostile client cannot file a hold larger or smaller than its range"
+      ],
+      "artifacts": ["src/mocks/", "src/data/parsers.ts"]
+    },
+    {
+      "id": "phase-3",
+      "title": "Data layer threading",
+      "goal": "submitFlow/retry, hcmApi payload, ledger entries and rehydration carry the range; persisted-ledger schema bumps to v2 with a migration dropping pre-date entries.",
+      "dependsOn": ["phase-2"],
+      "parallelizable": false,
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "t1",
+          "description": "Update flows + their MSW tests to file with ranges; retry resends the same range.",
+          "status": "completed",
+          "verification": "pnpm test"
+        },
+        {
+          "id": "t2",
+          "description": "zustand persist version 2 + migrate (old entries without dates are dropped — they cannot be re-verified into the new shape).",
+          "status": "completed",
+          "verification": "pnpm test"
+        }
+      ],
+      "acceptance": [
+        "No any/casts introduced; rehydration invariants still hold"
+      ],
+      "artifacts": ["src/data/"]
+    },
+    {
+      "id": "phase-4",
+      "title": "UI/UX: date-range form + range everywhere",
+      "goal": "RequestForm becomes a start/end picker (native inputs, min=today) with a live summary ('N business days · Jun 15 – Jun 17') and inline validation states (end-before-start, past start, weekend-only); RequestTimeline and DecisionPanel display the range.",
+      "dependsOn": ["phase-3"],
+      "parallelizable": false,
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "t1",
+          "description": "TDD RequestForm: valid range submits {locationId, startDate, endDate, days}; each invalid state disables submit and explains why; defaults to the next business day.",
+          "status": "completed",
+          "verification": "pnpm test"
+        },
+        {
+          "id": "t2",
+          "description": "RequestTimeline + DecisionPanel show formatRange; component tests updated.",
+          "status": "completed",
+          "verification": "pnpm test"
+        },
+        {
+          "id": "t3",
+          "description": "Stories: new validation-state stories for the form; flow-story play functions drive the date inputs.",
+          "status": "completed",
+          "verification": "pnpm test:storybook"
+        }
+      ],
+      "acceptance": [
+        "Submit is impossible while the range is invalid, and the reason is on screen",
+        "The same range the employee picked is what the manager decides on"
+      ],
+      "artifacts": ["src/components/", "src/views/"]
+    },
+    {
+      "id": "phase-5",
+      "title": "E2E adaptation + visual verification",
+      "goal": "E2E helper drives the date inputs (next-Monday anchored ranges); all 16 specs green; Chrome MCP visual pass in light/dark; Chromatic baseline reviewed.",
+      "dependsOn": ["phase-4"],
+      "parallelizable": false,
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "t1",
+          "description": "Shared e2e range helper; update all specs that filed via the Days input; full suite green.",
+          "status": "completed",
+          "verification": "pnpm test:e2e"
+        },
+        {
+          "id": "t2",
+          "description": "MCP visual verification (both views, both schemes, full employee→manager loop) + Chromatic baseline accepted after review; TRD/AGENTS notes.",
+          "status": "completed",
+          "verification": "Full gate + green CI on main"
+        }
+      ],
+      "acceptance": ["Green CI on main; demo verified visually"],
+      "artifacts": ["e2e/", "docs/"]
+    }
+  ]
+}

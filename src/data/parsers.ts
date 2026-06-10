@@ -53,19 +53,39 @@ export function parseRequestRecord(
   if (!isRecord(value)) {
     return undefined;
   }
-  const { id, employeeId, locationId, days, status, filedAt, decidedAt } =
-    value;
+  const {
+    id,
+    employeeId,
+    locationId,
+    startDate,
+    endDate,
+    days,
+    status,
+    filedAt,
+    decidedAt,
+  } = value;
   if (
     typeof id !== "string" ||
     typeof employeeId !== "string" ||
     typeof locationId !== "string" ||
+    typeof startDate !== "string" ||
+    typeof endDate !== "string" ||
     typeof days !== "number" ||
     !isHcmStatus(status) ||
     typeof filedAt !== "string"
   ) {
     return undefined;
   }
-  const base = { id, employeeId, locationId, days, status, filedAt };
+  const base = {
+    id,
+    employeeId,
+    locationId,
+    startDate,
+    endDate,
+    days,
+    status,
+    filedAt,
+  };
   return typeof decidedAt === "string" ? { ...base, decidedAt } : base;
 }
 

@@ -27,12 +27,18 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+const END_BY_DAYS: Readonly<Record<number, string>> = {
+  2: "2026-06-16",
+  3: "2026-06-17",
+};
+
 function filePendingRequest(days: number): string {
   const version = hcm.getCell(EMP, LOC)?.version ?? -1;
   const filed = hcm.fileRequest({
     employeeId: EMP,
     locationId: LOC,
-    days,
+    startDate: "2026-06-15",
+    endDate: END_BY_DAYS[days] ?? "2026-06-16",
     expectedVersion: version,
   });
   if (!filed.ok) {
