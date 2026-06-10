@@ -84,6 +84,10 @@ the cell moved. Manager approvals are gated the same way (TRD §7).
   correct behavior.
 - Prettier formats everything; `pnpm format:check` is part of the CI gate.
 - All code, comments, and content in **English**.
+- **User-facing copy speaks the domain, not dev jargon**: freshness is sync
+  vocabulary (`Synced` / `Sync delayed` / `Out of sync`, `Periodic sync`),
+  and a request is never called "approved" before the manager approves.
+  Internal identifiers (`fresh/aging/stale`) are code and stay as-is.
 
 ## Commands
 
@@ -93,12 +97,21 @@ pnpm storybook         # Storybook at :6006
 pnpm test              # unit project: domain, data flows vs MSW, components
 pnpm test:watch        # same, watch mode
 pnpm test:storybook    # every story as a browser-mode interaction test
-pnpm test:e2e          # Playwright vs real route handlers (port 3100)
+pnpm test:e2e          # Playwright vs the PRODUCTION server (builds, then next start on :3100)
 pnpm test:e2e:headed   # watch it in a real Chrome window
 pnpm test:e2e:ui       # Playwright UI mode (time-travel debugging)
 pnpm test:coverage     # v8 coverage for both Vitest projects
 pnpm format / format:check
 pnpm lint / typecheck / build
+```
+
+Run a single test:
+
+```bash
+pnpm test src/domain/requestMachine.test.ts          # one unit test file
+pnpm test -- -t "verifies the filing"                # by test name
+pnpm test:storybook src/views/EmployeeView.stories.tsx  # one story file
+pnpm exec playwright test --grep "wrong-success"     # one e2e by title
 ```
 
 ## Recipes
@@ -113,7 +126,9 @@ pnpm lint / typecheck / build
 3. **Stories**: `src/components/MyThing.stories.tsx` — one story per visual
    state (derive states from the FSM/staleness, don't invent). Add `play`
    functions for interactive behavior; stories are tests
-   (`pnpm test:storybook` must stay green).
+   (`pnpm test:storybook` must stay green). **Never `new Date()` in story
+   fixtures** — use static ISO strings; Chromatic snapshots must be
+   deterministic (see gotchas).
 4. Wire it from a container in `src/views/` — the component itself never
    fetches.
 
@@ -248,3 +263,15 @@ whether `plan-0001` (production-readiness roadmap) already covers the work.
   ours is `examplehr-timeoff-five.vercel.app`.
 - App singletons (`appLedger`, notifications store) have `clear()` —
   Storybook's preview loader calls them between stories; tests should too.
+- **Chromatic snapshots must stay deterministic**: story fixtures use static
+  ISO dates, and `.storybook/preview.tsx` freezes `Date` under Chromatic's
+  capture browser (`chromatic/isChromatic`). Do NOT re-enable
+  `autoAcceptChanges` to silence diffs — a diff now means a real visual
+  change (regressions get flagged; intentional changes are accepted once in
+  the Chromatic UI). Determinism was proven by back-to-back builds 15/16.
+- **E2E runs against `next start`**, not `next dev`: dev-mode on-demand route
+  compilation can exceed assertion timeouts on cold routes (was a real
+  flake). Also, Next 16 refuses two dev servers for the same project — stop a
+  running `pnpm dev` if the e2e web server fails to boot.
+- Vercel's upload API intermittently 500s — the deploy step retries 3× with
+  backoff (regression issues #1/#2).
