@@ -2,8 +2,8 @@ import type { ReactElement } from "react";
 
 import type { BalanceCellView, HcmRequestRecord } from "@/domain/types";
 
-import { ProvenanceBadge } from "./ProvenanceBadge";
-import { Skeleton } from "./Skeleton";
+import { ProvenanceBadge } from "../ProvenanceBadge";
+import { Skeleton } from "../Skeleton";
 
 interface DecisionPanelProps {
   readonly request: HcmRequestRecord;

@@ -9,8 +9,10 @@ import {
   usePendingRequests,
   useRealtimeHcm,
 } from "@/data/hooks";
-import { DecisionPanel } from "@/components/DecisionPanel";
-import { DecisionPanelSkeleton } from "@/components/Skeleton";
+import {
+  DecisionPanel,
+  DecisionPanelSkeleton,
+} from "@/components/DecisionPanel";
 import { ReconciliationToaster } from "@/components/ReconciliationToaster";
 
 interface PendingRequestSectionProps {

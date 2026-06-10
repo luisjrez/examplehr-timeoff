@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, type ReactElement } from "react";
 
 import type { BalanceCellView } from "@/domain/types";
 
-import { ProvenanceBadge } from "./ProvenanceBadge";
-import { BalanceCellSkeleton } from "./Skeleton";
+import { ProvenanceBadge } from "../ProvenanceBadge";
+import { BalanceCellSkeleton } from "./BalanceCellSkeleton";
 
 interface BalanceCellCardProps {
   readonly locationName: string;
