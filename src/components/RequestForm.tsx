@@ -33,14 +33,18 @@ export function RequestForm({
   isSubmitting,
   onSubmit,
 }: RequestFormProps): ReactElement {
-  const [locationId, setLocationId] = useState<string>(
-    locations[0]?.id ?? "",
+  // Locations hydrate asynchronously (they come from the corpus), so the
+  // default is DERIVED on render; state only stores an explicit user choice.
+  // Initializing state from locations[0] would freeze the pre-hydration "".
+  const [chosenLocationId, setChosenLocationId] = useState<string | undefined>(
+    undefined,
   );
+  const locationId = chosenLocationId ?? locations[0]?.id ?? "";
   const [daysText, setDaysText] = useState<string>("1");
 
   const handleLocationChange = useCallback(
     (event: FormEvent<HTMLSelectElement>) => {
-      setLocationId(event.currentTarget.value);
+      setChosenLocationId(event.currentTarget.value);
     },
     [],
   );

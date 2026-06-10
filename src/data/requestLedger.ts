@@ -22,6 +22,8 @@ export interface LedgerState {
   /** Routes an event through the pure FSM; illegal events are no-ops. */
   readonly dispatch: (clientId: string, event: RequestEvent) => void;
   readonly attachHcmId: (clientId: string, hcmId: string) => void;
+  /** Wipe session state — used by Storybook/tests for isolation. */
+  readonly clear: () => void;
 }
 
 export type LedgerStore = StoreApi<LedgerState>;
@@ -57,6 +59,8 @@ export function createLedgerStore(): LedgerStore {
           ? { requests: { ...state.requests, [clientId]: { ...existing, hcmId } } }
           : state;
       }),
+
+    clear: () => set({ requests: {} }),
   }));
 }
 

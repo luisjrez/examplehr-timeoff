@@ -33,6 +33,8 @@ interface NotificationsState {
   readonly notifications: readonly AppNotification[];
   readonly push: Notify;
   readonly dismiss: (id: string) => void;
+  /** Wipe session state — used by Storybook/tests for isolation. */
+  readonly clear: () => void;
 }
 
 export const useNotificationsStore = create<NotificationsState>((set) => ({
@@ -48,4 +50,5 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
     set((state) => ({
       notifications: state.notifications.filter((n) => n.id !== id),
     })),
+  clear: () => set({ notifications: [] }),
 }));
