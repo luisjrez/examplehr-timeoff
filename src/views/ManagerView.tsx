@@ -90,7 +90,7 @@ export function ManagerView(): ReactElement {
                 : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
             }`}
           >
-            {live ? "● Live" : "○ Polling"}
+            {live ? "● Live" : "○ Periodic sync"}
           </span>
         </h1>
         <p className="text-sm text-gray-600 dark:text-zinc-300">

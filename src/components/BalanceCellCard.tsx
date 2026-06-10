@@ -90,7 +90,8 @@ export function BalanceCellCard({
       ) : null}
       {view.confirmed ? (
         <p className="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">
-          confirmed at {new Date(view.confirmed.updatedAt).toLocaleTimeString()}
+          synced from HCM at{" "}
+          {new Date(view.confirmed.updatedAt).toLocaleTimeString()}
         </p>
       ) : (
         <p className="mt-1 text-[11px] text-red-500">never confirmed by HCM</p>

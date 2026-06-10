@@ -24,7 +24,10 @@ import type { ChaosInjection } from "@/data/hcmApi";
 import { queryKeys } from "@/data/queryKeys";
 import { EMPLOYEE_DIRECTORY, LOCATION_DIRECTORY } from "@/mocks/hcmStore";
 import { BalanceCellCard } from "@/components/BalanceCellCard";
-import { BalanceCellSkeleton } from "@/components/Skeleton";
+import {
+  BalanceCellSkeleton,
+  RequestFormSkeleton,
+} from "@/components/Skeleton";
 import { RequestForm, type RequestFormValues } from "@/components/RequestForm";
 import { RequestTimeline } from "@/components/RequestTimeline";
 import { ReconciliationToaster } from "@/components/ReconciliationToaster";
@@ -135,7 +138,7 @@ export function EmployeeView(): ReactElement {
           <h1 className="text-2xl font-semibold">My time off</h1>
           <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-zinc-300">
             {EMPLOYEE_DIRECTORY[CURRENT_EMPLOYEE]}
-            {/* Disclose the freshness mode: SSE push vs polling fallback. */}
+            {/* Disclose the freshness mode: SSE push vs periodic-sync fallback. */}
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                 live
@@ -143,7 +146,7 @@ export function EmployeeView(): ReactElement {
                   : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
               }`}
             >
-              {live ? "● Live" : "○ Polling"}
+              {live ? "● Live" : "○ Periodic sync"}
             </span>
           </p>
         </div>
@@ -205,11 +208,21 @@ export function EmployeeView(): ReactElement {
 
       <section aria-label="New request" className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">Request time off</h2>
-        <RequestForm
-          locations={formLocations}
-          isSubmitting={isSubmitting}
-          onSubmit={handleSubmit}
-        />
+        {!hydrated && formLocations.length === 0 ? (
+          // A form without location options is not actionable — skeleton
+          // until the corpus hydrates (an empty corpus shows the message).
+          <RequestFormSkeleton />
+        ) : formLocations.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-zinc-400">
+            No locations available to request against.
+          </p>
+        ) : (
+          <RequestForm
+            locations={formLocations}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit}
+          />
+        )}
       </section>
 
       <section aria-label="My requests" className="flex flex-col gap-2">

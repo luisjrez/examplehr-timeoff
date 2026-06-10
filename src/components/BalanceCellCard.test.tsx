@@ -72,7 +72,7 @@ describe("BalanceCellCard", () => {
       />,
     );
 
-    expect(screen.getByText(/stale/i)).toBeInTheDocument();
+    expect(screen.getByText(/out of sync/i)).toBeInTheDocument();
   });
 
   it("should render a loading skeleton when no confirmed value exists yet", () => {

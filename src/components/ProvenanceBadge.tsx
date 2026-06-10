@@ -13,10 +13,12 @@ const BADGE_STYLES: Readonly<Record<Staleness, string>> = {
   stale: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300",
 };
 
+// User-facing vocabulary: this system's freshness is about how recently we
+// synced with HCM, so the labels say exactly that — no dev jargon.
 const BADGE_LABELS: Readonly<Record<Staleness, string>> = {
-  fresh: "Fresh",
-  aging: "Aging",
-  stale: "Stale",
+  fresh: "Synced",
+  aging: "Sync delayed",
+  stale: "Out of sync",
 };
 
 /**

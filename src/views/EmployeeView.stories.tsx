@@ -68,6 +68,10 @@ export const Loading: Story = {
     await expect(
       canvas.getByText(/loading balances from hcm/i),
     ).toBeInTheDocument();
+    // The form skeletons too: without locations it is not actionable.
+    await expect(
+      canvas.getByRole("status", { name: /loading request form/i }),
+    ).toBeInTheDocument();
   },
 };
 
