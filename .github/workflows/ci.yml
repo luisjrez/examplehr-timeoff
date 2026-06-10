@@ -5,6 +5,14 @@ on:
     branches: [main]
   pull_request:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
 jobs:
   # The quality gate: nothing deploys unless ALL of this is green.
   quality:
@@ -44,6 +52,19 @@ jobs:
 
       - name: Production build
         run: pnpm build
+
+      # Forensic evidence for the auto-filed regression issue: HTML report,
+      # traces and videos of the failing specs.
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-${{ github.run_number }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore
 
   deploy-storybook:
     runs-on: ubuntu-latest
@@ -93,3 +114,134 @@ jobs:
           pnpm dlx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           pnpm dlx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
           pnpm dlx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+  # Senior-QA regression alerting: any failure on main auto-files a GitHub
+  # issue with the diagnosis, the fix playbook and a copy-paste agent prompt.
+  # Issues are deduped per failing-job set: repeats land as comments.
+  regression-alert:
+    runs-on: ubuntu-latest
+    needs: [quality, deploy-storybook, deploy-vercel]
+    if: always() && github.event_name == 'push' && contains(needs.*.result, 'failure')
+    steps:
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const runId = context.runId;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${runId}`;
+            const sha = context.sha;
+            const shortSha = sha.slice(0, 7);
+            const commit = context.payload.head_commit ?? {};
+            const commitMessage = (commit.message ?? "").split("\n")[0];
+            const author = commit.author?.username ?? commit.author?.name ?? "unknown";
+
+            // Which jobs/steps actually failed in this run?
+            const { data: jobsData } = await github.rest.actions.listJobsForWorkflowRun({
+              owner, repo, run_id: runId, per_page: 100,
+            });
+            const failedJobs = jobsData.jobs.filter((j) => j.conclusion === "failure");
+            if (failedJobs.length === 0) return;
+
+            const failedNames = failedJobs.map((j) => j.name).sort().join(", ");
+            const jobDetails = failedJobs
+              .map((j) => {
+                const steps = (j.steps ?? [])
+                  .filter((s) => s.conclusion === "failure")
+                  .map((s) => `\`${s.name}\``)
+                  .join(", ") || "(job-level failure)";
+                return `- **${j.name}** → step(s): ${steps} — [logs](${j.html_url})`;
+              })
+              .join("\n");
+
+            const reproduceByJob = {
+              "quality": [
+                "pnpm install",
+                "pnpm format:check && pnpm lint && pnpm typecheck",
+                "pnpm test                # domain invariants, data flows vs MSW, components",
+                "pnpm test:storybook      # browser-mode interaction tests (every UI state)",
+                "pnpm test:e2e            # Playwright vs real route handlers",
+                "pnpm build",
+              ],
+              "deploy-storybook": [
+                "pnpm build-storybook     # must build clean",
+                "# then check the CHROMATIC_PROJECT_TOKEN secret and chromatic.com build logs",
+              ],
+              "deploy-vercel": [
+                "pnpm build               # must build clean",
+                "# then check secrets: VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID",
+                "# manual deploy fallback: pnpm dlx vercel deploy --prod",
+              ],
+            };
+            const reproduce = failedJobs
+              .map((j) => `**${j.name}:**\n\`\`\`bash\n${(reproduceByJob[j.name] ?? ["# see job logs"]).join("\n")}\n\`\`\``)
+              .join("\n\n");
+
+            const agentPrompt = [
+              `Eres un agente de desarrollo trabajando en el repo ${owner}/${repo} (Next.js App Router + TanStack Query + Storybook).`,
+              ``,
+              `REGRESIÓN EN main — commit ${sha} ("${commitMessage}" por ${author}).`,
+              `Jobs fallidos: ${failedNames}.`,
+              `Run con logs y artefactos (playwright-report, traces, videos): ${runUrl}`,
+              ``,
+              `Contexto del proyecto:`,
+              `- docs/TRD.md es la especificación: modelo de dos capas (confirmed en TanStack Query + overlay de holds en Zustand), FSM de requests en src/domain/requestMachine.ts, verificación post-escritura en src/data/submitFlow.ts, decisiones con CAS en src/data/decideFlow.ts, mock HCM en src/mocks/hcmStore.ts (un cerebro, dos transportes: route handlers y MSW).`,
+              `- Matriz de tests en README ("Test suite — what guards what"): cada capa tiene su guardia; NO debilites un test para ponerlo en verde — un test que falla describe el comportamiento correcto.`,
+              ``,
+              `Instrucciones:`,
+              `1. git checkout ${sha} y reproduce localmente con los comandos del job fallido (ver issue).`,
+              `2. Aísla la capa: si falla un property test de dominio, el bug está en la FSM/proyección; si falla un test de data con MSW, en los flows; si falla una story, en el contrato visual de un estado; si falla e2e, en el cableado entre capas.`,
+              `3. Arregla con red-green-refactor. Reglas duras: TypeScript estricto sin any, sin funciones inline en JSX (jsx-no-bind), capas separadas (domain sin React, data sin JSX, components sin fetching), comentarios solo del porqué.`,
+              `4. Antes de proponer el fix verifica TODO el gate: pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:storybook && pnpm test:e2e && pnpm build.`,
+              `5. Si el fallo es de deploy (no de código), revisa secrets/configuración y documenta la causa raíz en el issue en vez de tocar código.`,
+            ].join("\n");
+
+            const body = [
+              `## ❗ Problema`,
+              ``,
+              `El push [\`${shortSha}\`](${context.serverUrl}/${owner}/${repo}/commit/${sha}) ("${commitMessage}", @${author}) rompió **main**.`,
+              ``,
+              jobDetails,
+              ``,
+              `📦 Artefactos forenses (HTML report, traces, videos de Playwright): pestaña **Artifacts** del [run](${runUrl}).`,
+              ``,
+              `## 🔬 Cómo reproducir`,
+              ``,
+              reproduce,
+              ``,
+              `## 🛠 Cómo se soluciona`,
+              ``,
+              `1. Identifica el step exacto en los logs del job (links arriba).`,
+              `2. Reproduce en local sobre el commit roto: \`git checkout ${shortSha}\`.`,
+              `3. La matriz del README dice qué guarda cada capa de tests — el tipo de test que falló te dice dónde vive el bug. **No debilites el test.**`,
+              `4. Fix con red-green-refactor y valida el gate completo antes de pushear.`,
+              `5. Si es fallo de deploy (secrets/infra), corrige la configuración y documenta la causa raíz aquí.`,
+              ``,
+              `## 🤖 Agent prompt (copiar y pegar)`,
+              ``,
+              "```",
+              agentPrompt,
+              "```",
+            ].join("\n");
+
+            // Dedupe: one open issue per failing-job set; repeats become comments.
+            const titlePrefix = `🔴 Regression on main: ${failedNames}`;
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner, repo, state: "open", labels: "regression", per_page: 100,
+            });
+            const duplicate = existing.find((i) => i.title.startsWith(titlePrefix));
+
+            if (duplicate) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: duplicate.number,
+                body: `Sigue fallando en [\`${shortSha}\`](${context.serverUrl}/${owner}/${repo}/commit/${sha}) — [run ${context.runNumber}](${runUrl}).`,
+              });
+              core.notice(`Commented on existing regression issue #${duplicate.number}`);
+            } else {
+              const { data: issue } = await github.rest.issues.create({
+                owner, repo,
+                title: `${titlePrefix} (run #${context.runNumber})`,
+                body,
+                labels: ["regression", "ci"],
+              });
+              core.notice(`Filed regression issue #${issue.number}`);
+            }

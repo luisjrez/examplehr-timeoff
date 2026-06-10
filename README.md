@@ -38,6 +38,14 @@ pnpm storybook      # every UI state, at http://localhost:6006
 | `pnpm test:e2e`       | Playwright vs real route handlers, two tabs                                         | Cross-layer wiring: employee→manager loop, denial refunds, version-gated approvals, chaos recovery                                                                    |
 | `pnpm test:coverage`  | Coverage (v8) for the two Vitest projects                                           | —                                                                                                                                                                     |
 
+Watch the e2e suite run for yourself:
+
+```bash
+pnpm test:e2e:headed   # real Chrome window, watch both personas interact
+pnpm test:e2e:ui       # Playwright UI mode: time-travel through every step
+pnpm exec playwright show-report   # HTML report of the last run
+```
+
 Route handlers and pages show 0% in Vitest coverage **by design** — they are
 exercised end-to-end by Playwright, not mocked twice (TRD §10).
 
@@ -72,9 +80,20 @@ src/mocks/          the HCM brain + its two transports (routes, MSW)
 e2e/                Playwright specs
 ```
 
-## Quality gates
+## Quality gates & regression alerting
 
-`pnpm typecheck` (strict TS: `noUncheckedIndexedAccess`,
-`exactOptionalPropertyTypes`, no `any` anywhere) · `pnpm lint` (type-aware
-ESLint: `no-unsafe-*`, `jsx-no-bind`, exhaustive switches; warnings fail) ·
-CI runs lint, typecheck, unit, storybook tests, e2e and build on every push.
+`pnpm format:check` (Prettier) · `pnpm typecheck` (strict TS:
+`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, no `any` anywhere) ·
+`pnpm lint` (type-aware ESLint: `no-unsafe-*`, `jsx-no-bind`, exhaustive
+switches; warnings fail).
+
+The CI pipeline is a single **quality gate** (prettier → eslint → typecheck →
+unit → storybook → e2e → build). Deploys to Chromatic and Vercel run **only**
+if the gate is green — there is no path to production around it.
+
+**Regression alerting:** any failure on `main` auto-files a GitHub issue
+(label `regression`) containing the failing jobs/steps with log links, the
+exact commands to reproduce locally, a fix playbook, links to the forensic
+artifacts (Playwright HTML report, traces, videos), and a **copy-paste agent
+prompt** carrying all the context an AI agent needs to resolve it. Repeat
+failures of the same job set dedupe into comments on the open issue.
