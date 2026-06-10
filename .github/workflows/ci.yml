@@ -93,6 +93,10 @@ jobs:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           onlyChanged: true
           exitZeroOnChanges: true
+          # main IS the baseline: deploys here already passed the quality
+          # gate (incl. 34 interaction tests), so visual changes self-accept.
+          # Manual review remains the flow for PR builds.
+          autoAcceptChanges: main
 
   deploy-vercel:
     runs-on: ubuntu-latest
