@@ -39,7 +39,9 @@ export function projectCell(
   requests: readonly TimeOffRequest[],
   now: Date,
 ): BalanceCellView {
-  const pending = requests.filter((request) => isPreConfirmation(request.phase));
+  const pending = requests.filter((request) =>
+    isPreConfirmation(request.phase),
+  );
   const heldDays = pending.reduce((sum, request) => sum + request.days, 0);
 
   return {

@@ -1,4 +1,4 @@
-import { getHcmStore, } from "@/mocks/singleton";
+import { getHcmStore } from "@/mocks/singleton";
 import {
   errorResponse,
   hcmErrorResponse,

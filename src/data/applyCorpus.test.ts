@@ -59,7 +59,10 @@ describe("applyCorpus", () => {
     // The corpus is expensive and slow; a per-cell verification read may have
     // already written a NEWER version than the corpus snapshot carries.
     const queryClient = new QueryClient();
-    queryClient.setQueryData(queryKeys.cell("emp-alice", "loc-mx"), cell(10, 5));
+    queryClient.setQueryData(
+      queryKeys.cell("emp-alice", "loc-mx"),
+      cell(10, 5),
+    );
 
     applyCorpus(queryClient, [cell(12, 3)], () => undefined);
 

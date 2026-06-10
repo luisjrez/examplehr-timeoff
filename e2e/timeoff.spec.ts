@@ -20,9 +20,7 @@ async function fileRequest(
     await employeePage.getByLabel("HCM chaos mode").selectOption(chaos);
   }
   await employeePage.getByLabel("Days").fill(days);
-  await employeePage
-    .getByRole("button", { name: "Request time off" })
-    .click();
+  await employeePage.getByRole("button", { name: "Request time off" }).click();
 }
 
 test("employee files → manager approves → employee is told, honestly", async ({
@@ -53,7 +51,9 @@ test("employee files → manager approves → employee is told, honestly", async
   ).toBeVisible();
 
   // The employee's open session learns the outcome via decision sync.
-  await expect(employeePage.getByText("Time off granted", { exact: true })).toBeVisible({
+  await expect(
+    employeePage.getByText("Time off granted", { exact: true }),
+  ).toBeVisible({
     timeout: 15_000,
   });
 
@@ -108,10 +108,10 @@ test("silent failure: contradiction surfaces, rolls back, and retry recovers", a
 
   // Recovery: retry goes through the clean path and verifies.
   await page.getByLabel("HCM chaos mode").selectOption("");
-  await page
-    .getByRole("button", { name: "Retry with fresh balance" })
-    .click();
-  await expect(page.getByText("Awaiting manager approval", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Retry with fresh balance" }).click();
+  await expect(
+    page.getByText("Awaiting manager approval", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("10", { exact: true })).toBeVisible();
 });
 
@@ -124,9 +124,7 @@ test("anniversary bonus mid-session reconciles with a narrated toast", async ({
   await page.getByRole("button", { name: /anniversary bonus/i }).click();
 
   await expect(page.getByText("13", { exact: true })).toBeVisible();
-  await expect(
-    page.getByText(/balance updated by hcm/i).first(),
-  ).toBeVisible();
+  await expect(page.getByText(/balance updated by hcm/i).first()).toBeVisible();
 });
 
 test("approval is version-gated: a bonus between read and click blocks it", async ({
@@ -165,7 +163,5 @@ test("approval is version-gated: a bonus between read and click blocks it", asyn
 
   // Second decision, now against current truth, succeeds.
   await page.getByRole("button", { name: "Approve" }).click();
-  await expect(
-    page.getByText("No requests waiting for review."),
-  ).toBeVisible();
+  await expect(page.getByText("No requests waiting for review.")).toBeVisible();
 });

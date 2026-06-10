@@ -62,8 +62,8 @@ export function DecisionPanel({
 
       {conflict ? (
         <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-800">
-          The balance changed since you opened this request — the numbers
-          above were refreshed. Review them before deciding.
+          The balance changed since you opened this request — the numbers above
+          were refreshed. Review them before deciding.
         </p>
       ) : null}
 

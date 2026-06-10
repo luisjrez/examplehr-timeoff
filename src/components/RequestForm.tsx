@@ -49,12 +49,9 @@ export function RequestForm({
     [],
   );
 
-  const handleDaysChange = useCallback(
-    (event: FormEvent<HTMLInputElement>) => {
-      setDaysText(event.currentTarget.value);
-    },
-    [],
-  );
+  const handleDaysChange = useCallback((event: FormEvent<HTMLInputElement>) => {
+    setDaysText(event.currentTarget.value);
+  }, []);
 
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {

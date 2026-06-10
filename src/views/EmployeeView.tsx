@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState, type FormEvent, type ReactElement } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type FormEvent,
+  type ReactElement,
+} from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { BalanceCell } from "@/domain/types";

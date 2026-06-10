@@ -56,7 +56,12 @@ export function createLedgerStore(): LedgerStore {
       set((state) => {
         const existing = state.requests[clientId];
         return existing
-          ? { requests: { ...state.requests, [clientId]: { ...existing, hcmId } } }
+          ? {
+              requests: {
+                ...state.requests,
+                [clientId]: { ...existing, hcmId },
+              },
+            }
           : state;
       }),
 

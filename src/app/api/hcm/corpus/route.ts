@@ -1,8 +1,5 @@
 import { getHcmStore } from "@/mocks/singleton";
-import {
-  maybeFireDemoAnniversary,
-  withChaos,
-} from "@/mocks/routeHelpers";
+import { maybeFireDemoAnniversary, withChaos } from "@/mocks/routeHelpers";
 
 /** The corpus is "expensive": a baseline latency makes that real (TRD §9). */
 const CORPUS_BASE_LATENCY_MS = 600;

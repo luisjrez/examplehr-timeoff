@@ -21,10 +21,7 @@ describe("RequestForm", () => {
       />,
     );
 
-    await user.selectOptions(
-      screen.getByLabelText(/location/i),
-      "loc-us",
-    );
+    await user.selectOptions(screen.getByLabelText(/location/i), "loc-us");
     await user.clear(screen.getByLabelText(/days/i));
     await user.type(screen.getByLabelText(/days/i), "3");
     await user.click(screen.getByRole("button", { name: /request time off/i }));
@@ -55,8 +52,6 @@ describe("RequestForm", () => {
       <RequestForm locations={LOCATIONS} isSubmitting onSubmit={vi.fn()} />,
     );
 
-    expect(
-      screen.getByRole("button", { name: /submitting/i }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: /submitting/i })).toBeDisabled();
   });
 });

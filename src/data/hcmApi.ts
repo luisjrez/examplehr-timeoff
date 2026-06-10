@@ -61,7 +61,9 @@ const KNOWN_ERRORS: ReadonlySet<string> = new Set([
 function baseUrl(): string {
   // jsdom and the browser both provide an origin; bare Node (if it ever
   // happens) falls back to localhost so URL construction cannot throw.
-  return typeof window !== "undefined" ? window.location.origin : "http://localhost";
+  return typeof window !== "undefined"
+    ? window.location.origin
+    : "http://localhost";
 }
 
 async function call<T>(
@@ -135,14 +137,22 @@ export const hcmApi = {
   },
 
   getRequest(id: string): Promise<ApiResult<HcmRequestRecord>> {
-    return call(`/api/hcm/requests/${id}`, { method: "GET" }, parseRequestRecord);
+    return call(
+      `/api/hcm/requests/${id}`,
+      { method: "GET" },
+      parseRequestRecord,
+    );
   },
 
   listRequests(
     status?: HcmRequestStatus,
   ): Promise<ApiResult<readonly HcmRequestRecord[]>> {
     const query = status === undefined ? "" : `?status=${status}`;
-    return call(`/api/hcm/requests${query}`, { method: "GET" }, parseRequestList);
+    return call(
+      `/api/hcm/requests${query}`,
+      { method: "GET" },
+      parseRequestList,
+    );
   },
 
   decideRequest(
@@ -167,7 +177,11 @@ export const hcmApi = {
       "/api/hcm/triggers/anniversary",
       { method: "POST", body: JSON.stringify({ employeeId }) },
       (body) => {
-        if (typeof body !== "object" || body === null || !("affected" in body)) {
+        if (
+          typeof body !== "object" ||
+          body === null ||
+          !("affected" in body)
+        ) {
           return undefined;
         }
         const affected = (body as { affected: unknown }).affected;

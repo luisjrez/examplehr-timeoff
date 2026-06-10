@@ -71,9 +71,9 @@ describe("syncDecisions", () => {
 
     const pendingLedger = seedLedger("pending_approval");
     syncDecisions(pendingLedger, [record("req-0001", "pending")], notify);
-    expect(
-      pendingLedger.getState().requests["client-1"]?.phase.status,
-    ).toBe("pending_approval");
+    expect(pendingLedger.getState().requests["client-1"]?.phase.status).toBe(
+      "pending_approval",
+    );
     expect(notify).not.toHaveBeenCalled();
   });
 });

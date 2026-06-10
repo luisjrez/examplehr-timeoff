@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "vitest";
 import { setupServer } from "msw/node";
 import { QueryClient } from "@tanstack/react-query";
 
@@ -74,7 +82,9 @@ describe("decideOnRequest", () => {
     expect(queryClient.getQueryData(queryKeys.cell(EMP, LOC))).toMatchObject({
       version: staleVersion + 1,
     });
-    expect(notifications.some((n) => n.kind === "decision_conflict")).toBe(true);
+    expect(notifications.some((n) => n.kind === "decision_conflict")).toBe(
+      true,
+    );
   });
 
   it("denying refunds the hold and refreshes the cell cache", async () => {

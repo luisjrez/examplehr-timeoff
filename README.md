@@ -1,5 +1,9 @@
 # ExampleHR — Time-Off Frontend
 
+**Live demo:** [examplehr-timeoff-five.vercel.app](https://examplehr-timeoff-five.vercel.app) ·
+**Storybook:** [Chromatic](https://main--6a299211ce79a0f82652a294.chromatic.com) ·
+**Repo:** [luisjrez/examplehr-timeoff](https://github.com/luisjrez/examplehr-timeoff)
+
 A Time-Off module where the **HCM (Workday/SAP) owns the numbers** and the
 frontend stays honest about it: balances can change underneath an open
 session, a `200 OK` can be a lie, and the UI must give instant feedback
@@ -27,12 +31,12 @@ pnpm storybook      # every UI state, at http://localhost:6006
 
 ## Test suite (what guards what)
 
-| Command | Layer | Guards against |
-|---|---|---|
-| `pnpm test` | Domain FSM + projection (fast-check), mock HCM brain, data flows vs MSW, components | Invariant violations under any event interleaving; the verification flow; rollback/recovery logic |
-| `pnpm test:storybook` | Every story is a browser-mode interaction test | The states the assignment demands: loading, empty, stale, optimistic-pending, optimistic-rolled-back, HCM-rejected, HCM-silently-wrong, balance-refreshed-mid-session |
-| `pnpm test:e2e` | Playwright vs real route handlers, two tabs | Cross-layer wiring: employee→manager loop, denial refunds, version-gated approvals, chaos recovery |
-| `pnpm test:coverage` | Coverage (v8) for the two Vitest projects | — |
+| Command               | Layer                                                                               | Guards against                                                                                                                                                        |
+| --------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test`           | Domain FSM + projection (fast-check), mock HCM brain, data flows vs MSW, components | Invariant violations under any event interleaving; the verification flow; rollback/recovery logic                                                                     |
+| `pnpm test:storybook` | Every story is a browser-mode interaction test                                      | The states the assignment demands: loading, empty, stale, optimistic-pending, optimistic-rolled-back, HCM-rejected, HCM-silently-wrong, balance-refreshed-mid-session |
+| `pnpm test:e2e`       | Playwright vs real route handlers, two tabs                                         | Cross-layer wiring: employee→manager loop, denial refunds, version-gated approvals, chaos recovery                                                                    |
+| `pnpm test:coverage`  | Coverage (v8) for the two Vitest projects                                           | —                                                                                                                                                                     |
 
 Route handlers and pages show 0% in Vitest coverage **by design** — they are
 exercised end-to-end by Playwright, not mocked twice (TRD §10).

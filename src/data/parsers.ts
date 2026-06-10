@@ -35,7 +35,9 @@ export function parseBalanceCell(value: unknown): BalanceCell | undefined {
   return { employeeId, locationId, days, version, updatedAt };
 }
 
-export function parseCorpus(value: unknown): readonly BalanceCell[] | undefined {
+export function parseCorpus(
+  value: unknown,
+): readonly BalanceCell[] | undefined {
   if (!isRecord(value) || !Array.isArray(value.cells)) {
     return undefined;
   }

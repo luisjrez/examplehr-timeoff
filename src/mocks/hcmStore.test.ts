@@ -221,9 +221,7 @@ describe("hcmStore — the world changes underneath (anniversary bonus)", () => 
       "loc-us",
     ]);
     expect(store.getCell(EMP, LOC)?.days).toBe((mxBefore?.days ?? 0) + 1);
-    expect(store.getCell(EMP, LOC)?.version).toBe(
-      (mxBefore?.version ?? 0) + 1,
-    );
+    expect(store.getCell(EMP, LOC)?.version).toBe((mxBefore?.version ?? 0) + 1);
     expect(store.getCell(EMP, "loc-us")?.days).toBe((usBefore?.days ?? 0) + 1);
   });
 

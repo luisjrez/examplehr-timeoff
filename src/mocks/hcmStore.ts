@@ -138,7 +138,10 @@ export function createHcmStore(now: () => Date = () => new Date()): HcmStore {
       if (!cell) {
         return { ok: false, error: "invalid_dimensions" };
       }
-      if (input.chaos === "conflict" || cell.version !== input.expectedVersion) {
+      if (
+        input.chaos === "conflict" ||
+        cell.version !== input.expectedVersion
+      ) {
         return { ok: false, error: "version_conflict" };
       }
       if (input.days <= 0 || cell.days < input.days) {

@@ -76,9 +76,7 @@ export const Empty: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/api/hcm/corpus", () =>
-          HttpResponse.json({ cells: [] }),
-        ),
+        http.get("/api/hcm/corpus", () => HttpResponse.json({ cells: [] })),
         http.get("/api/hcm/requests", () =>
           HttpResponse.json({ requests: [] }),
         ),
@@ -88,9 +86,7 @@ export const Empty: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(async () => {
-      await expect(
-        canvas.getByText(/no balances found/i),
-      ).toBeInTheDocument();
+      await expect(canvas.getByText(/no balances found/i)).toBeInTheDocument();
     });
   },
 };

@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "vitest";
 import { setupServer } from "msw/node";
 import { QueryClient } from "@tanstack/react-query";
 
@@ -81,7 +89,10 @@ describe("submitTimeOffRequest — happy path", () => {
   it("verifies the filing and folds the hold into confirmed (no double count)", async () => {
     const h = createHarness();
 
-    await submitTimeOffRequest({ employeeId: EMP, locationId: LOC, days: 2 }, h.deps);
+    await submitTimeOffRequest(
+      { employeeId: EMP, locationId: LOC, days: 2 },
+      h.deps,
+    );
 
     const requests = Object.values(h.ledger.getState().requests);
     expect(requests).toHaveLength(1);
@@ -136,7 +147,10 @@ describe("submitTimeOffRequest — HCM lies (chaos)", () => {
     // The anniversary bonus lands after hydration but before our write.
     hcm.triggerAnniversary(EMP);
 
-    await submitTimeOffRequest({ employeeId: EMP, locationId: LOC, days: 2 }, h.deps);
+    await submitTimeOffRequest(
+      { employeeId: EMP, locationId: LOC, days: 2 },
+      h.deps,
+    );
 
     expect(Object.values(h.ledger.getState().requests)[0]?.phase).toEqual({
       status: "contradicted",
@@ -185,7 +199,10 @@ describe("recovery actions", () => {
     const h = createHarness();
     hcm.triggerAnniversary(EMP); // forces version_conflict on first try
 
-    await submitTimeOffRequest({ employeeId: EMP, locationId: LOC, days: 2 }, h.deps);
+    await submitTimeOffRequest(
+      { employeeId: EMP, locationId: LOC, days: 2 },
+      h.deps,
+    );
     const clientId = Object.keys(h.ledger.getState().requests)[0] ?? "";
     expect(h.ledger.getState().requests[clientId]?.phase.status).toBe(
       "contradicted",

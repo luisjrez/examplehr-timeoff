@@ -68,7 +68,10 @@ export function errorResponse(status: number, code: string): Response {
   return Response.json({ error: code }, { status });
 }
 
-export function hcmErrorResponse(error: HcmErrorCode, status: number): Response {
+export function hcmErrorResponse(
+  error: HcmErrorCode,
+  status: number,
+): Response {
   return errorResponse(status, error);
 }
 

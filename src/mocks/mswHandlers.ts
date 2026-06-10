@@ -17,25 +17,33 @@ import {
  * Unlike the route-handler layer there is no demo-mode dice rolling here:
  * in tests and stories, ALL chaos is explicit via the x-chaos header.
  */
-export function buildHcmHandlers(store: HcmStore): ReturnType<typeof http.get>[] {
+export function buildHcmHandlers(
+  store: HcmStore,
+): ReturnType<typeof http.get>[] {
   return [
-    http.get("/api/hcm/balance/:employeeId/:locationId", async ({ request, params }) => {
-      const chaos = parseChaosHeader(request.headers.get(CHAOS_HEADER));
-      if (chaos.latencyMs !== undefined) {
-        await delay(chaos.latencyMs);
-      }
-      if (chaos.hardError === true) {
-        return HttpResponse.json({ error: "hcm_unavailable" }, { status: 500 });
-      }
-      const cell = store.getCell(
-        String(params.employeeId),
-        String(params.locationId),
-      );
-      if (!cell) {
-        return HttpResponse.json({ error: "not_found" }, { status: 404 });
-      }
-      return HttpResponse.json(cell);
-    }),
+    http.get(
+      "/api/hcm/balance/:employeeId/:locationId",
+      async ({ request, params }) => {
+        const chaos = parseChaosHeader(request.headers.get(CHAOS_HEADER));
+        if (chaos.latencyMs !== undefined) {
+          await delay(chaos.latencyMs);
+        }
+        if (chaos.hardError === true) {
+          return HttpResponse.json(
+            { error: "hcm_unavailable" },
+            { status: 500 },
+          );
+        }
+        const cell = store.getCell(
+          String(params.employeeId),
+          String(params.locationId),
+        );
+        if (!cell) {
+          return HttpResponse.json({ error: "not_found" }, { status: 404 });
+        }
+        return HttpResponse.json(cell);
+      },
+    ),
 
     http.get("/api/hcm/corpus", async ({ request }) => {
       const chaos = parseChaosHeader(request.headers.get(CHAOS_HEADER));
@@ -117,7 +125,9 @@ export function buildHcmHandlers(store: HcmStore): ReturnType<typeof http.get>[]
       if (typeof employeeId !== "string") {
         return HttpResponse.json({ error: "malformed_body" }, { status: 400 });
       }
-      return HttpResponse.json({ affected: store.triggerAnniversary(employeeId) });
+      return HttpResponse.json({
+        affected: store.triggerAnniversary(employeeId),
+      });
     }),
 
     http.post("/api/hcm/reset", () => {

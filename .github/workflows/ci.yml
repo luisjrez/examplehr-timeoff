@@ -6,6 +6,7 @@ on:
   pull_request:
 
 jobs:
+  # The quality gate: nothing deploys unless ALL of this is green.
   quality:
     runs-on: ubuntu-latest
     steps:
@@ -20,11 +21,17 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm lint
+      - name: Prettier
+        run: pnpm format:check
 
-      - run: pnpm typecheck
+      - name: ESLint (zero warnings)
+        run: pnpm lint
 
-      - run: pnpm test
+      - name: TypeScript
+        run: pnpm typecheck
+
+      - name: Unit & integration tests
+        run: pnpm test
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
@@ -35,15 +42,17 @@ jobs:
       - name: E2E (Playwright vs real route handlers)
         run: pnpm test:e2e
 
-      - run: pnpm build
+      - name: Production build
+        run: pnpm build
 
-  chromatic:
+  deploy-storybook:
     runs-on: ubuntu-latest
-    # Chromatic needs full git history for baselines.
-    if: github.event_name == 'push'
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
         with:
+          # Chromatic needs full git history for baselines.
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
@@ -60,3 +69,27 @@ jobs:
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           onlyChanged: true
+          exitZeroOnChanges: true
+
+  deploy-vercel:
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Deploy to Vercel (production)
+        run: |
+          pnpm dlx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          pnpm dlx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          pnpm dlx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

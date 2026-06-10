@@ -79,7 +79,9 @@ export const PendingWithBalanceContext: Story = {
       // Balance right now: 9 (12 seeded − 3 held at filing).
       await expect(canvas.getByText("9")).toBeInTheDocument();
     });
-    await expect(canvas.getByRole("button", { name: /approve/i })).toBeEnabled();
+    await expect(
+      canvas.getByRole("button", { name: /approve/i }),
+    ).toBeEnabled();
   },
 };
 
