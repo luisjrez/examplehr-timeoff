@@ -119,7 +119,17 @@ jobs:
         run: |
           pnpm dlx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           pnpm dlx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          pnpm dlx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          # Vercel's upload API intermittently 500s (seen twice: issues #1, #2)
+          # — retry the deploy with backoff before declaring a regression.
+          for attempt in 1 2 3; do
+            if pnpm dlx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}; then
+              exit 0
+            fi
+            echo "Deploy attempt ${attempt} failed; retrying in $((attempt * 20))s…"
+            sleep $((attempt * 20))
+          done
+          echo "All deploy attempts failed."
+          exit 1
 
   # Senior-QA regression alerting: any failure on main auto-files a GitHub
   # issue with the diagnosis, the fix playbook and a copy-paste agent prompt.
