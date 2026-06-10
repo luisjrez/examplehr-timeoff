@@ -7,9 +7,10 @@ interface ProvenanceBadgeProps {
 }
 
 const BADGE_STYLES: Readonly<Record<Staleness, string>> = {
-  fresh: "bg-emerald-100 text-emerald-800",
-  aging: "bg-amber-100 text-amber-800",
-  stale: "bg-red-100 text-red-800",
+  fresh:
+    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300",
+  aging: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300",
+  stale: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300",
 };
 
 const BADGE_LABELS: Readonly<Record<Staleness, string>> = {

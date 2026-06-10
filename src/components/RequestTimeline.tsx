@@ -63,11 +63,11 @@ function present(phase: RequestPhase): PhasePresentation {
 }
 
 const TONE_STYLES: Readonly<Record<PhasePresentation["tone"], string>> = {
-  progress: "text-blue-700 bg-blue-50",
-  ok: "text-emerald-700 bg-emerald-50",
-  bad: "text-red-700 bg-red-50",
-  warn: "text-amber-700 bg-amber-50",
-  muted: "text-gray-500 bg-gray-50",
+  progress: "text-blue-700 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/40",
+  ok: "text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-900/40",
+  bad: "text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-900/40",
+  warn: "text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-900/40",
+  muted: "text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-800/70",
 };
 
 export function RequestTimeline({
@@ -87,7 +87,7 @@ export function RequestTimeline({
   }, [onDiscard, request.id]);
 
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
+    <li className="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-zinc-700 p-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm">
           {request.days} day(s) · {locationName}
@@ -99,7 +99,9 @@ export function RequestTimeline({
         </span>
       </div>
       {presentation.detail ? (
-        <p className="text-xs text-gray-600">{presentation.detail}</p>
+        <p className="text-xs text-gray-600 dark:text-zinc-300">
+          {presentation.detail}
+        </p>
       ) : null}
       {request.phase.status === "contradicted" ? (
         <div className="flex gap-2">
@@ -113,7 +115,7 @@ export function RequestTimeline({
           <button
             type="button"
             onClick={handleDiscard}
-            className="rounded-md border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50"
+            className="rounded-md border border-gray-300 dark:border-zinc-600 px-3 py-1 text-xs hover:bg-gray-50 dark:hover:bg-zinc-800"
           >
             Discard
           </button>

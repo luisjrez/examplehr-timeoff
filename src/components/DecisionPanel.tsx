@@ -32,7 +32,7 @@ export function DecisionPanel({
   const disabled = isCellLoading || isDeciding || !cellView.confirmed;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 dark:border-zinc-700 p-4">
       <div className="flex items-center justify-between">
         <p className="text-sm">
           <span className="font-medium">{request.employeeId}</span> requests{" "}
@@ -41,9 +41,9 @@ export function DecisionPanel({
         </p>
       </div>
 
-      <div className="flex items-center gap-2 rounded-md bg-gray-50 p-2 text-sm">
+      <div className="flex items-center gap-2 rounded-md bg-gray-50 dark:bg-zinc-800/70 p-2 text-sm">
         {isCellLoading || !cellView.confirmed ? (
-          <span role="status" className="text-gray-500">
+          <span role="status" className="text-gray-500 dark:text-zinc-400">
             Reading current balance from HCM…
           </span>
         ) : (
@@ -61,7 +61,7 @@ export function DecisionPanel({
       </div>
 
       {conflict ? (
-        <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-800">
+        <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
           The balance changed since you opened this request — the numbers above
           were refreshed. Review them before deciding.
         </p>

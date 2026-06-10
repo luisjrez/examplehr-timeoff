@@ -7,7 +7,7 @@ export default function Home(): ReactElement {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-8 p-8">
       <h1 className="text-3xl font-semibold">ExampleHR — Time Off</h1>
-      <p className="max-w-md text-center text-sm text-gray-600">
+      <p className="max-w-md text-center text-sm text-gray-600 dark:text-zinc-300">
         Balances are owned by the HCM. This UI is honest about what is
         confirmed, what is pending, and what is stale.
       </p>
@@ -20,7 +20,7 @@ export default function Home(): ReactElement {
         </Link>
         <Link
           href="/manager"
-          className="rounded-lg border border-gray-300 px-5 py-2.5 hover:bg-gray-50"
+          className="rounded-lg border border-gray-300 dark:border-zinc-600 px-5 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-800"
         >
           Manager view
         </Link>

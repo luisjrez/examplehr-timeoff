@@ -78,18 +78,18 @@ export function ManagerView(): ReactElement {
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
       <header>
         <h1 className="text-2xl font-semibold">Pending approvals</h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-zinc-300">
           Balances shown are read from HCM at decision time, not cached.
         </p>
       </header>
 
       <section aria-label="Pending requests" className="flex flex-col gap-3">
         {isLoading ? (
-          <p role="status" className="text-sm text-gray-500">
+          <p role="status" className="text-sm text-gray-500 dark:text-zinc-400">
             Loading pending requests…
           </p>
         ) : requests.length === 0 ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-zinc-400">
             No requests waiting for review.
           </p>
         ) : (

@@ -25,10 +25,10 @@ export function BalanceCellCard({
       <div
         role="status"
         aria-label={`Loading balance for ${locationName}`}
-        className="animate-pulse rounded-xl border border-gray-200 p-4"
+        className="animate-pulse rounded-xl border border-gray-200 dark:border-zinc-700 p-4"
       >
-        <div className="mb-3 h-4 w-24 rounded bg-gray-200" />
-        <div className="h-10 w-16 rounded bg-gray-200" />
+        <div className="mb-3 h-4 w-24 rounded bg-gray-200 dark:bg-zinc-700" />
+        <div className="h-10 w-16 rounded bg-gray-200 dark:bg-zinc-700" />
       </div>
     );
   }
@@ -36,21 +36,23 @@ export function BalanceCellCard({
   const heldDays = view.pending.reduce((sum, request) => sum + request.days, 0);
 
   return (
-    <div className="rounded-xl border border-gray-200 p-4">
+    <div className="rounded-xl border border-gray-200 dark:border-zinc-700 p-4">
       <div className="mb-1 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700">{locationName}</h3>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-zinc-200">
+          {locationName}
+        </h3>
         <ProvenanceBadge staleness={view.staleness} />
       </div>
       <p className="text-4xl font-semibold tabular-nums">{view.projected}</p>
-      <p className="text-xs text-gray-500">days available</p>
+      <p className="text-xs text-gray-500 dark:text-zinc-400">days available</p>
       {heldDays > 0 && view.confirmed ? (
-        <p className="mt-2 text-xs text-gray-600">
+        <p className="mt-2 text-xs text-gray-600 dark:text-zinc-300">
           {view.confirmed.days} confirmed by HCM · −{heldDays} pending
           confirmation
         </p>
       ) : null}
       {view.confirmed ? (
-        <p className="mt-1 text-[11px] text-gray-400">
+        <p className="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">
           confirmed at {new Date(view.confirmed.updatedAt).toLocaleTimeString()}
         </p>
       ) : (

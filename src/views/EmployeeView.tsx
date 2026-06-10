@@ -132,22 +132,22 @@ export function EmployeeView(): ReactElement {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">My time off</h1>
-          <p className="flex items-center gap-2 text-sm text-gray-600">
+          <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-zinc-300">
             {EMPLOYEE_DIRECTORY[CURRENT_EMPLOYEE]}
             {/* Disclose the freshness mode: SSE push vs polling fallback. */}
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                 live
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-gray-100 text-gray-600"
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
+                  : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
               }`}
             >
               {live ? "● Live" : "○ Polling"}
             </span>
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 p-2 text-xs">
-          <span className="text-gray-500">Simulate:</span>
+        <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 dark:border-zinc-600 p-2 text-xs">
+          <span className="text-gray-500 dark:text-zinc-400">Simulate:</span>
           <label htmlFor="ev-chaos" className="sr-only">
             HCM chaos mode
           </label>
@@ -155,7 +155,7 @@ export function EmployeeView(): ReactElement {
             id="ev-chaos"
             value={chaos}
             onChange={handleChaosChange}
-            className="rounded border border-gray-300 px-1 py-0.5"
+            className="rounded border border-gray-300 dark:border-zinc-600 px-1 py-0.5"
           >
             {CHAOS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -167,7 +167,7 @@ export function EmployeeView(): ReactElement {
             type="button"
             onClick={handleAnniversary}
             disabled={isTriggering}
-            className="rounded border border-gray-300 px-2 py-0.5 hover:bg-gray-50 disabled:opacity-50"
+            className="rounded border border-gray-300 dark:border-zinc-600 px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-zinc-800 disabled:opacity-50"
           >
             🎉 Anniversary bonus
           </button>
@@ -176,11 +176,11 @@ export function EmployeeView(): ReactElement {
 
       <section aria-label="Balances">
         {!hydrated && locationIds.length === 0 ? (
-          <p role="status" className="text-sm text-gray-500">
+          <p role="status" className="text-sm text-gray-500 dark:text-zinc-400">
             Loading balances from HCM…
           </p>
         ) : locationIds.length === 0 ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-zinc-400">
             No balances found for this employee.
           </p>
         ) : (
@@ -208,7 +208,7 @@ export function EmployeeView(): ReactElement {
       <section aria-label="My requests" className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">My requests</h2>
         {sortedRequests.length === 0 ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-zinc-400">
             Nothing requested this session.
           </p>
         ) : (

@@ -68,17 +68,20 @@ export function RequestForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 p-4"
+      className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 dark:border-zinc-700 p-4"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="rf-location" className="text-xs text-gray-600">
+        <label
+          htmlFor="rf-location"
+          className="text-xs text-gray-600 dark:text-zinc-300"
+        >
           Location
         </label>
         <select
           id="rf-location"
           value={locationId}
           onChange={handleLocationChange}
-          className="rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+          className="rounded-md border border-gray-300 dark:border-zinc-600 px-2 py-1.5 text-sm"
         >
           {locations.map((location) => (
             <option key={location.id} value={location.id}>
@@ -89,7 +92,10 @@ export function RequestForm({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="rf-days" className="text-xs text-gray-600">
+        <label
+          htmlFor="rf-days"
+          className="text-xs text-gray-600 dark:text-zinc-300"
+        >
           Days
         </label>
         <input
@@ -99,7 +105,7 @@ export function RequestForm({
           step={1}
           value={daysText}
           onChange={handleDaysChange}
-          className="w-20 rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+          className="w-20 rounded-md border border-gray-300 dark:border-zinc-600 px-2 py-1.5 text-sm"
         />
       </div>
 
