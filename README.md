@@ -21,10 +21,19 @@ executable as a stateful multi-phase plan in
 
 ## Quick start
 
+Prerequisites: **Node.js ≥ 20** (developed on 22) and **pnpm** — if you don't
+have pnpm: `corepack enable` (ships with Node) or `npm i -g pnpm`.
+
 ```bash
 pnpm install
 pnpm dev            # app + mock HCM at http://localhost:3000
 pnpm storybook      # every UI state, at http://localhost:6006
+```
+
+For the e2e suite only, install the Playwright browser once:
+
+```bash
+pnpm exec playwright install chromium
 ```
 
 - `/employee` — balances per location, date-range request filing (business
