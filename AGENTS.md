@@ -275,3 +275,8 @@ whether `plan-0001` (production-readiness roadmap) already covers the work.
   running `pnpm dev` if the e2e web server fails to boot.
 - Vercel's upload API intermittently 500s — the deploy step retries 3× with
   backoff (regression issues #1/#2).
+- **Freshness badges measure the SYNC CHANNEL, not data age**: SSE live →
+  always "Synced"; on polling fallback the anchor is the last successful
+  reconciliation (equal-version cache writes count as sync proofs — do not
+  "optimize" them away). Anchoring to HCM's `updatedAt` was a real bug:
+  idle-but-healthy deployments showed "Out of sync" everywhere.

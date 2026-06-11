@@ -57,7 +57,7 @@ function reconcileCell(
 ): void {
   const key = queryKeys.cell(cell.employeeId, cell.locationId);
   const previous = queryClient.getQueryData<BalanceCell>(key);
-  if (previous && previous.version >= cell.version) {
+  if (previous && previous.version > cell.version) {
     return;
   }
 

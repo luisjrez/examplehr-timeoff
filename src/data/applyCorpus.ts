@@ -25,7 +25,10 @@ export function applyCorpus(
     const key = queryKeys.cell(cell.employeeId, cell.locationId);
     const previous = queryClient.getQueryData<BalanceCell>(key);
 
-    if (previous && previous.version >= cell.version) {
+    // Lower version = regression, skip. EQUAL version still writes: a
+    // reconciliation that confirms the same value is a sync proof, and the
+    // cache timestamp (dataUpdatedAt) anchors the freshness badge.
+    if (previous && previous.version > cell.version) {
       continue;
     }
     if (previous && cell.days !== previous.days) {
@@ -48,7 +51,7 @@ function formatDelta(delta: number): string {
 export function mergeCell(queryClient: QueryClient, cell: BalanceCell): void {
   const key = queryKeys.cell(cell.employeeId, cell.locationId);
   const previous = queryClient.getQueryData<BalanceCell>(key);
-  if (!previous || cell.version > previous.version) {
+  if (!previous || cell.version >= previous.version) {
     queryClient.setQueryData(key, cell);
   }
 }

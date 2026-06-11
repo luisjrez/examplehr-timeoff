@@ -137,7 +137,7 @@ When a reconciliation (corpus or cell read) changes a confirmed value while the 
 ### 6.5 Degradation (C7)
 
 - Retries with exponential backoff (TanStack default, capped) for reads; **no automatic retry for writes** (a silent failure followed by a blind retry could double-book — instead the verification read decides).
-- `staleness` derives from `confirmed.updatedAt` age: `fresh < 30s ≤ aging < 2min ≤ stale`. Stale cells render a visible badge; the UI never blocks on HCM.
+- `staleness` is a property of the SYNC CHANNEL, not of HCM's mutation timestamp: with SSE connected the data is continuously fresh; on polling fallback the anchor is the last successful reconciliation (corpus confirms every cell, even unchanged ones — an equal-version write is a sync proof). Thresholds tolerate one missed 60s poll (`aging ≥ 90s`, `stale ≥ 180s`). A balance untouched for a year is perfectly fresh if we synced five seconds ago.
 - Writes carry `expectedVersion` (compare-and-swap). A `409` is a first-class domain event (→ `contradicted`), not an exception.
 
 ### 6.6 Real-time push (SSE)

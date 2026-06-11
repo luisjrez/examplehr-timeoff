@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNotificationsStore } from "../notifications";
 import { appLedger } from "../requestLedger";
 import { reconcileRealtimeEvent } from "../realtime";
+import { useSyncStatusStore } from "../syncStatus";
 
 /**
  * Subscribes to the HCM real-time feed (SSE) and folds events into the
@@ -17,6 +18,9 @@ export function useRealtimeHcm(): { readonly live: boolean } {
   const queryClient = useQueryClient();
   const notify = useNotificationsStore((s) => s.push);
   const [live, setLive] = useState(false);
+  // Mirror into the shared store: balance cells read channel health from
+  // there (they must never open their own EventSource).
+  const setSharedLive = useSyncStatusStore((s) => s.setLive);
 
   useEffect(() => {
     // jsdom (unit tests) has no EventSource; Storybook's MSW answers 204,
@@ -28,9 +32,11 @@ export function useRealtimeHcm(): { readonly live: boolean } {
 
     const handleOpen = (): void => {
       setLive(true);
+      setSharedLive(true);
     };
     const handleError = (): void => {
       setLive(false);
+      setSharedLive(false);
     };
     const handleMessage = (event: MessageEvent<string>): void => {
       reconcileRealtimeEvent(queryClient, appLedger, event.data, notify);
@@ -42,8 +48,9 @@ export function useRealtimeHcm(): { readonly live: boolean } {
 
     return () => {
       source.close();
+      setSharedLive(false);
     };
-  }, [queryClient, notify]);
+  }, [queryClient, notify, setSharedLive]);
 
   return { live };
 }
